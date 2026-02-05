@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
+import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/core/widgets/required_label.dart';
+import 'package:tempus/core/theme/app_input_theme.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,14 +16,14 @@ class _LoginPageState extends State<LoginPage> {
   final _idController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  final Color brandBlue = const Color(0xFF1A56DB);
+  final Color brandBlue = AppColors.brandBlue;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE5EAF5),
+      backgroundColor: AppColors.background,
       body: SingleChildScrollView(
         child: SizedBox(
           height: size.height, // Forces full screen height
@@ -38,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
                   bottom: false,
                   child: WText(
                     'TEMPUS',
-                    className: 'text-white font-bold text-xl tracking-widest',
+                    className: 'text-white font-bold text-2xl tracking-widest',
                   ),
                 ),
               ),
@@ -56,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: AppColors.text,
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -75,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
 
                           // --- Student ID ---
-                          _label('Student ID *'),
+                          RequiredLabel('Student ID *'),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _idController,
@@ -83,21 +86,18 @@ class _LoginPageState extends State<LoginPage> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            decoration: _inputStyle(
-                              "Enter your student ID",
-                              isFocused: true,
-                            ),
+                            decoration: AppInputTheme.loginInputStyle("Enter your student ID",),
                           ),
 
                           const SizedBox(height: 20),
 
                           // --- Password ---
-                          _label('Password *'),
+                          RequiredLabel('Password *'),
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _passwordController,
                             obscureText: true,
-                            decoration: _inputStyle("Enter your password"),
+                            decoration: AppInputTheme.loginInputStyle("Enter your password"),
                           ),
 
                           // --- Forgot Password ---
@@ -111,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: WText(
                                 'Forgot Password?',
                                 className:
-                                    'text-[#1A56DB] font-bold cursor-pointer text-sm',
+                                    'text-[${AppColors.brandBlueHex}] font-bold cursor-pointer text-sm',
                               ),
                             ),
                           ),
@@ -159,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                               WText(
                                 "Register here",
                                 className:
-                                    'text-[#1A56DB] font-bold cursor-pointer text-sm',
+                                    'text-[${AppColors.brandBlueHex}] font-bold cursor-pointer text-sm',
                               ),
                             ],
                           ),
@@ -211,54 +211,6 @@ class _LoginPageState extends State<LoginPage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // Helper for bold labels
-  Widget _label(String text) {
-    return RichText(
-      text: TextSpan(
-        text: text.replaceAll('*', ''),
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
-          fontSize: 15,
-        ),
-        children: [
-          if (text.contains('*'))
-            const TextSpan(
-              text: ' *',
-              style: TextStyle(color: Colors.red),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // Input styling
-  InputDecoration _inputStyle(String hint, {bool isFocused = false}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(
-        color: Colors.grey,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-      ),
-      filled: true,
-      fillColor: const Color(0xFFE0E0E0),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: const BorderSide(color: Colors.transparent),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: BorderSide(color: brandBlue, width: 2),
       ),
     );
   }
