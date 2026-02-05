@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFF1A56DB),
         useMaterial3: true,
       ),
-      home: const LandingPage(),
+      home: const LoginPage(),
     );
   }
 }
