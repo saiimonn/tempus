@@ -2,15 +2,24 @@
 
 A new Flutter project.
 
-## Getting Started
+## File Structure
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+lib/
+ ├── core/
+ │    ├── theme/
+ │    │    ├── app_colors.dart
+ │    │    └── app_input_theme.dart
+ │    └── widgets/
+ │         └── required_label.dart
+ ├── features/
+ │    ├── feature_name/
+ │    │    ├── presentation/
+ │    │    │    └── feature_name_page.dart
+ │    │    ├── logic/
+ │    │    │    └── feature_name_bloc.dart
+ │    │    └── data/
+ │    │         ├── feature_name_repository.dart
+ │    │         └── feature_name_service.dart
+ └── main.dart
+```
