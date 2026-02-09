@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
-import 'features/login/presentation/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'features/auth/presentation/splash_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load and intialize the supabase .env file
+  await dotenv.load(fileName: ".env");
+
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_KEY']!,
+  );
+
   runApp(const MyApp());
 }
 
@@ -12,12 +24,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Login Demo',
+      title: 'Tempus',
       theme: ThemeData(
         primaryColor: const Color(0xFF1A56DB),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: const SplashPage(),
     );
   }
 }
