@@ -19,7 +19,10 @@ class AppInputTheme {
     );
   }
 
-  static OutlineInputBorder _outlineBorder({Color color = Colors.transparent, double width = 1}) {
+  static OutlineInputBorder _outlineBorder({
+    Color color = Colors.transparent,
+    double width = 1,
+  }) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(6),
       borderSide: BorderSide(color: color, width: width),
