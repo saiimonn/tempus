@@ -39,7 +39,7 @@ class EmptyTaskCard extends StatelessWidget {
                       WText("Today's Tasks", className: "text-sm text-white"),
                       const SizedBox(height: 5),
                       WText(
-                        "Nothing on the plate yet",
+                        "Nothing on the board yet",
                         className: "text-white text-xl font-bold",
                       ),
                     ],
@@ -75,7 +75,7 @@ class EmptyTaskCard extends StatelessWidget {
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
                   "0 tasks remaining",
@@ -83,21 +83,6 @@ class EmptyTaskCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.brandBlue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text("Add Task"),
                 ),
               ],
             ),

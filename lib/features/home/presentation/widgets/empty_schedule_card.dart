@@ -9,7 +9,7 @@ class EmptyScheduleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -24,7 +24,6 @@ class EmptyScheduleCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WText("Classes Today", className: "text-lg font-bold text-blue-600"),
 
           const SizedBox(height: 20),
 
@@ -48,6 +47,8 @@ class EmptyScheduleCard extends StatelessWidget {
                   "Enjoy your free time.",
                   style: TextStyle(fontSize: 12, color: AppColors.foreground),
                 ),
+                
+                const SizedBox(height: 16),
               ],
             ),
           ),

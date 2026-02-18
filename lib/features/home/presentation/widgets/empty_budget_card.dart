@@ -38,7 +38,7 @@ class EmptyBudgetCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           const LinearProgressIndicator(
-            value: 0.05,
+            value: 0.00,
             backgroundColor: Colors.grey,
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandBlue),
             borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -50,14 +50,14 @@ class EmptyBudgetCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("Spent: ₱0", style: TextStyle(fontSize: 12)),
-              Text("Weekly Limit: ₱5,000", style: TextStyle(fontSize: 12)),
+              Text("Weekly Limit: ₱0", style: TextStyle(fontSize: 12)),
             ],
           ),
 
           const SizedBox(height: 12),
 
           const Text(
-            "Your wallet is currently empty, log a response.",
+            "Your finances haven't been set.",
             style: TextStyle(color: AppColors.destructive, fontSize: 12),
           ),
         ],
