@@ -19,14 +19,14 @@ class _HomePageState extends State<HomePage> {
   Future<void> _signOut() async {
     try {
       await Supabase.instance.client.auth.signOut();
-      if(mounted) {
+      if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginPage()),
           (route) => false,
         );
       }
-    } catch(e) {
-      if(mounted) {
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error signing out'),
@@ -106,13 +106,13 @@ class _HomePageState extends State<HomePage> {
           const Center(child: Text("Tasks Page")),
           const Center(child: Text("Finances Page")),
           const Center(child: Text("Subjects Page")),
-        ]
+        ],
       ),
 
       bottomNavigationBar: BottomNavBar(
         currentIdx: _selectedIndex,
         onTap: _onItemTapped,
-      )
+      ),
     );
   }
 
@@ -127,6 +127,12 @@ class _HomePageState extends State<HomePage> {
 
           _buildEmptyTaskCard(),
           const SizedBox(height: 20),
+
+          _buildEmptyBudgetCard(),
+          const SizedBox(height: 20),
+
+          _buildEmptyScheduleSection(),
+          const SizedBox(height: 20),
         ],
       ),
     );
@@ -134,12 +140,12 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEmptyTaskCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 20),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.8),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -164,20 +170,30 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       WText("Today's Tasks", className: "text-sm text-white"),
                       const SizedBox(height: 5),
-                      WText("Nothing on the plate yet", className: "text-white text-xl font-bold"),
+                      WText(
+                        "Nothing on the plate yet",
+                        className: "text-white text-xl font-bold",
+                      ),
                     ],
                   ),
                 ),
 
-                Container (
+                Container(
                   height: 70,
-                  width: 70, 
+                  width: 70,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 8),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      width: 8,
+                    ),
                   ),
                   child: const Center(
-                    child: Icon(Icons.sentiment_satisfied_alt, color: Colors.white, size: 30),
+                    child: Icon(
+                      Icons.sentiment_satisfied_alt,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
                 ),
               ],
@@ -195,19 +211,134 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const Text(
                   "0 tasks remaining",
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.brandBlue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: const Text("Add Task"),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyBudgetCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              WText(
+                "Remaining Budget",
+                className: "font-xl font-bold text-blue-800",
+              ),
+              const Text(
+                "₱0",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const LinearProgressIndicator(
+            value: 0.05,
+            backgroundColor: Colors.grey,
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.brandBlue),
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+          ),
+
+          const SizedBox(height: 10),
+
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Spent: ₱0", style: TextStyle(fontSize: 12)),
+              Text("Weekly Limit: ₱5,000", style: TextStyle(fontSize: 12)),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          const Text(
+            "Your wallet is currently empty, log a response.",
+            style: TextStyle(color: AppColors.destructive, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyScheduleSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WText("Classes Today", className: "text-lg font-bold text-blue-600"),
+
+          const SizedBox(height: 20),
+
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.auto_stories,
+                  size: 60,
+                  color: AppColors.foreground.withValues(alpha: 0.5),
+                ),
+
+                const SizedBox(height: 16),
+
+                WText(
+                  "No classes scheduled today",
+                  className: "text-lg text-neutral-500 font-bold",
+                ),
+                Text(
+                  "Enjoy your free time.",
+                  style: TextStyle(fontSize: 12, color: AppColors.foreground),
                 ),
               ],
             ),
