@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/onboarding/data/onboarding_service.dart';
+import 'package:tempus/features/onboarding/presentation/onboarding.dart';
 import 'login_page.dart';
-import '../../home/presentation/home_page.dart';
+import 'package:tempus/features/home/presentation/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -33,7 +35,6 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _redirect() async {
-    // Delay Animation
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
@@ -41,14 +42,22 @@ class _SplashPageState extends State<SplashPage>
     final session = Supabase.instance.client.auth.currentSession;
 
     if (session != null) {
-      // User is logged in -> Go to Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
-      print("User is logged in! Redirecting to Home...");
+      final done = await OnboardingService.isComplete(session.user.id);
+
+      if (!mounted) return;
+
+      if (done) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingPage()),
+        );
+      }
     } else {
-      // User is logged out -> Go to Login
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
