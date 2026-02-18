@@ -4,8 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:tempus/features/home/presentation/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/onboarding/data/onboarding_service.dart';
+import 'package:tempus/features/onboarding/presentation/onboarding.dart';
 import 'register_page.dart';
-import '../../../core/widgets/auth_background.dart';
+import 'package:tempus/core/widgets/auth_background.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,9 +47,17 @@ class _LoginPageState extends State<LoginPage> {
             backgroundColor: Colors.green,
           ),
         );
+
+        final done = await OnboardingService.isComplete(res.user!.id);
+
+        if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(
+            builder: (context) =>
+                done ? const HomePage() : const OnboardingPage(),
+          ),
         );
       }
     } on AuthException catch (e) {
@@ -71,11 +81,21 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
       if (data.event == AuthChangeEvent.signedIn && mounted) {
+        final userId = data.session?.user.id;
+        if (userId == null) return;
+
+        final done = await OnboardingService.isComplete(userId);
+        if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(
+            builder: (context) =>
+                done ? const HomePage() : const OnboardingPage(),
+          ),
         );
       }
     });
