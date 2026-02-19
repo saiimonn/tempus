@@ -4,9 +4,9 @@ import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/onboarding/data/onboarding_service.dart';
-import 'package:tempus/features/onboarding/presentation/onboarding.dart';
+import 'package:tempus/features/onboarding/presentation/pages/onboarding.dart';
 import 'login_page.dart';
-import 'package:tempus/features/home/presentation/home_page.dart';
+import 'package:tempus/features/home/presentation/pages/home_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});

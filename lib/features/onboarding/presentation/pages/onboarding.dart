@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tempus/features/onboarding/data/onboarding_service.dart';
-import 'package:tempus/features/home/presentation/home_page.dart';
+import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/onboarding/data/onboarding_model.dart';
 
