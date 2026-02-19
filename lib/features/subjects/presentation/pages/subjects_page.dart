@@ -121,7 +121,7 @@ class SubjectsPage extends StatelessWidget {
                               TextButton(
                                 onPressed: () {},
                                 child: Text(
-                                  "View",
+                                  "View Scores",
                                   style: TextStyle(color: AppColors.brandBlue),
                                 ),
                               ),
@@ -327,7 +327,7 @@ class _AddSubjectBottomSheetState
                       child: TextFormField(
                         controller: _unitsController,
                         keyboardType: TextInputType.number,
-                        decoration: _inputDecoration("Units", "3"),
+                        decoration: _inputDecoration("Units", "e.g. 3"),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return "Req."; // Shorter text for small fields
