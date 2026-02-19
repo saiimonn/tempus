@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:tempus/core/theme/app_colors.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIdx;
@@ -13,21 +13,27 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      currentIndex: currentIdx,
-      onTap: onTap,
-      selectedItemColor: AppColors.brandBlue,
-      unselectedItemColor: AppColors.foreground,
-      showSelectedLabels: false,
-      showUnselectedLabels: false,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: 'Schedule'),
-        BottomNavigationBarItem(icon: Icon(Icons.note_rounded), label: 'Tasks'),
-        BottomNavigationBarItem(icon: Icon(Icons.wallet_rounded), label: 'Finances'),
-        BottomNavigationBarItem(icon: Icon(Icons.library_books_rounded), label: 'Subjects'),
-      ]
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+      ),
+      child: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: currentIdx,
+        onTap: onTap,
+        selectedItemColor: AppColors.brandBlue,
+        unselectedItemColor: AppColors.foreground,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: 'Schedule'),
+          BottomNavigationBarItem(icon: Icon(Icons.note_rounded), label: 'Tasks'),
+          BottomNavigationBarItem(icon: Icon(Icons.wallet_rounded), label: 'Finances'),
+          BottomNavigationBarItem(icon: Icon(Icons.library_books_rounded), label: 'Subjects'),
+        ]
+      )
     );
   }
 }

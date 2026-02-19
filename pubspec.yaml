@@ -44,6 +44,7 @@ dependencies:
   smooth_page_indicator: ^2.0.1
   shared_preferences: ^2.5.4
   flutter_bloc: ^9.1.1
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
