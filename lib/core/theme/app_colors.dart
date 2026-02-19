@@ -5,6 +5,10 @@ class AppColors {
   static const String textHex = "#191919";
   static const int textInt = 0x191919;
 
+  static const Color success = Color(0xFF1DB144);
+  static const String successHex = "#1DB144";
+  static const int successInt = 0x1DB144;
+
   static const Color brandBlue = Color(0xFF1A56DB);
   static const String brandBlueHex = "#1A56DB";
   static const int brandBlueInt = 0x1A56DB;

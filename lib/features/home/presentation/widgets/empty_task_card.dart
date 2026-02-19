@@ -8,6 +8,7 @@ class EmptyTaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: 180,
       margin: const EdgeInsets.symmetric(vertical: 16),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -22,71 +23,74 @@ class EmptyTaskCard extends StatelessWidget {
 
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-            decoration: const BoxDecoration(
-              color: AppColors.brandBlue,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            flex: 3,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.brandBlue,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        WText("Today's Tasks", className: "text-sm text-white"),
+                        const SizedBox(height: 5),
+                        WText(
+                          "Nothing on the board yet",
+                          className: "text-white text-xl font-bold",
+                        ),
+                      ],
+                    ),
+                  ),
+  
+                  Stack(
+                    alignment: Alignment.center,
                     children: [
-                      WText("Today's Tasks", className: "text-sm text-white"),
-                      const SizedBox(height: 5),
-                      WText(
-                        "Nothing on the board yet",
-                        className: "text-white text-xl font-bold",
+                      SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: CircularProgressIndicator(
+                          value: 0.2,
+                          strokeWidth: 4,
+                          color:  Colors.blueAccent,
+                          backgroundColor: Colors.grey.shade200,
+                        ),
                       ),
+                      Icon(Icons.sentiment_satisfied_alt, color: Colors.white, size: 30)
                     ],
                   ),
-                ),
-
-                Container(
-                  height: 70,
-                  width: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 8,
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.sentiment_satisfied_alt,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "0 tasks remaining",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+          Expanded(
+            flex: 2,
+            child:Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                ), 
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "0 tasks remaining",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
         ],
       ),
     );
