@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:tempus/core/theme/app_colors.dart';
 
 class EmptyScheduleCard extends StatelessWidget {
   const EmptyScheduleCard({super.key});

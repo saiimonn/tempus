@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:tempus/core/theme/app_colors.dart';
 
 class EmptyTaskCard extends StatelessWidget {
   const EmptyTaskCard({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
