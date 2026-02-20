@@ -9,6 +9,7 @@ import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
+import 'package:tempus/features/home/presentation/pages/schedule_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,7 +107,7 @@ class _HomePageState extends State<HomePage> {
           _buildHomeContent(name),
 
           // PLACEHOLDERS FOR PAGES
-          const Center(child: Text("Schedule Page")),
+          const SchedulePage(),
           const Center(child: Text("Tasks Page")),
           const Center(child: Text("Finances Page")),
           SubjectsPage(),
