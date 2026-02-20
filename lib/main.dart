@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'features/auth/presentation/splash_page.dart';
+import 'package:tempus/features/home/presentation/pages/home_page.dart';
+import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final session = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Tempus',
@@ -29,7 +33,7 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFF1A56DB),
         useMaterial3: true,
       ),
-      home: const SplashPage(),
+      home: session != null ? const HomePage() : const LoginPage(),
     );
   }
 }

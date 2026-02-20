@@ -43,6 +43,9 @@ dependencies:
   intl: ^0.20.2
   smooth_page_indicator: ^2.0.1
   shared_preferences: ^2.5.4
+  flutter_bloc: ^9.1.1
+  flutter_native_splash: ^2.4.7
+  gap: ^3.0.1
 
 dev_dependencies:
   flutter_test:
@@ -95,3 +98,16 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+
+  color: "#1A56DB"
+  image: assets/images/tempuslogo.png
+
+  android_12:
+    color: "#1A56DB"
+    image: assets/images/tempuslogo.png
+
+  android: true
+  ios: true
+  web: false

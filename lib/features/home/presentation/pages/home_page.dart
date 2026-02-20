@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../auth/presentation/login_page.dart';
-import '../../../core/widgets/bottom_navigation_bar.dart';
-import 'schedule_page.dart';
-import '../../../features/home/presentation/widgets/empty_task_card.dart';
-import '../../../features/home/presentation/widgets/empty_budget_card.dart';
-import '../../../features/home/presentation/widgets/empty_schedule_card.dart';
+import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/auth/presentation/pages/login_page.dart';
+import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
+import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
+import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
+import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
+import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
+import 'package:tempus/features/home/presentation/pages/schedule_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -109,7 +110,7 @@ class _HomePageState extends State<HomePage> {
           const SchedulePage(),
           const Center(child: Text("Tasks Page")),
           const Center(child: Text("Finances Page")),
-          const Center(child: Text("Subjects Page")),
+          SubjectsPage(),
         ],
       ),
 

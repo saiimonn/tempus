@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
-import 'package:tempus/features/home/presentation/home_page.dart';
+import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/onboarding/data/onboarding_service.dart';
-import 'package:tempus/features/onboarding/presentation/onboarding.dart';
+import 'package:tempus/features/onboarding/presentation/pages/onboarding.dart';
 import 'register_page.dart';
 import 'package:tempus/core/widgets/auth_background.dart';
 

@@ -5,7 +5,7 @@ import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 
 // --- YOUR IMPORTS ---
 import 'package:tempus/core/theme/app_colors.dart';
-import '../../../core/widgets/auth_background.dart';
+import 'package:tempus/core/widgets/auth_background.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
