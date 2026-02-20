@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/login_page.dart';
 import '../../../core/widgets/bottom_navigation_bar.dart';
+import 'schedule_page.dart';
 import '../../../features/home/presentation/widgets/empty_task_card.dart';
 import '../../../features/home/presentation/widgets/empty_budget_card.dart';
 import '../../../features/home/presentation/widgets/empty_schedule_card.dart';
@@ -105,7 +106,7 @@ class _HomePageState extends State<HomePage> {
           _buildHomeContent(name),
 
           // PLACEHOLDERS FOR PAGES
-          const Center(child: Text("Schedule Page")),
+          const SchedulePage(),
           const Center(child: Text("Tasks Page")),
           const Center(child: Text("Finances Page")),
           const Center(child: Text("Subjects Page")),
