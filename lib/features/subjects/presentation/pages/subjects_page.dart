@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/core/widgets/custom_text_field.dart';
 import 'package:tempus/features/subjects/logic/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/subject_detail_page.dart';
 
@@ -159,6 +160,8 @@ class SubjectsPage extends StatelessWidget {
   }
 
   Widget _buildAddSubjectCard(BuildContext context) {
+    final subjectBloc = context.read<SubjectBloc>();
+
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 20),
       child: InkWell(
@@ -167,7 +170,10 @@ class SubjectsPage extends StatelessWidget {
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
-            builder: (_) => _AddSubjectBottomSheet(),
+            builder: (_) => BlocProvider.value(
+              value: subjectBloc,
+              child: const _AddSubjectBottomSheet()
+            ),
           );
         },
         child: Container(
@@ -288,24 +294,19 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
 
                 const SizedBox(height: 20),
 
-                TextFormField(
+                CustomTextField(
+                  label: "Subject Name",
+                  hint: "e.g. Data Structures and Algorithms",
                   controller: _nameController,
-                  decoration: _inputDecoration(
-                    "Subject Name",
-                    "e.g. Data Structures and Algorithms",
-                  ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? "Required" : null,
+                  validator: (v) => v == null || v.isEmpty ? "Required" : null,
                 ),
 
                 const SizedBox(height: 16),
 
-                TextFormField(
+                CustomTextField(
+                  label: "Instructor",
+                  hint: "e.g. Christine Pena",
                   controller: _profController,
-                  decoration: _inputDecoration(
-                    "Instructor",
-                    "e.g. Christine Pena",
-                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -315,14 +316,12 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
+                      child: 
+                      CustomTextField(
+                        label: "Subject Code",
+                        hint: "e.g. CIS 2101",
                         controller: _codeController,
-                        decoration: _inputDecoration(
-                          "Subject Code",
-                          "e.g. CIS 2101",
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? "Required" : null,
+                        validator: (v) => v == null || v.isEmpty ? "Required" : null,
                       ),
                     ),
 
@@ -330,17 +329,20 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
 
                     Expanded(
                       flex: 1,
-                      child: TextFormField(
+                      child: 
+                      CustomTextField(
+                        label: "Units",
+                        hint: "e.g. 3.0",
                         controller: _unitsController,
-                        keyboardType: TextInputType.number,
-                        decoration: _inputDecoration("Units", "e.g. 3"),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return "Req."; // Shorter text for small fields
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return "Req.";
                           }
-                          if (int.tryParse(value) == null) {
+
+                          if (int.tryParse(v) == null) {
                             return "NaN";
                           }
+
                           return null;
                         },
                       ),

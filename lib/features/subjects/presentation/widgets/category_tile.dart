@@ -21,8 +21,8 @@ class CategoryTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 8,
+            height: 8,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.brandBlue,
@@ -35,7 +35,7 @@ class CategoryTile extends StatelessWidget {
             child: Text(
               "${category['name']}",
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: AppColors.text,
               ),
@@ -45,7 +45,7 @@ class CategoryTile extends StatelessWidget {
           Text(
             "${(category['weight'] as double).toStringAsFixed(0)}%",
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.text,
             ),
@@ -54,7 +54,7 @@ class CategoryTile extends StatelessWidget {
           const SizedBox(width: 12),
           GestureDetector(
             onTap: onDelete,
-            child: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade400),
+            child: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade500),
           ),
         ],
       ),
