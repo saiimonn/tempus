@@ -7,14 +7,6 @@ class LoadSubjects extends SubjectEvent {}
 
 class DeleteSubject extends SubjectEvent {}
 
-class AddGradeCategory extends SubjectEvent {}
-
-class DeleteGradeCategory extends SubjectEvent {}
-
-class AddScore extends SubjectEvent {}
-
-class DeleteScore extends SubjectEvent {}
-
 class AddSubject extends SubjectEvent {
   final Map<String, dynamic> subject;
   AddSubject(this.subject);

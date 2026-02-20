@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/subjects/logic/subject_bloc.dart';
+import 'package:tempus/features/subjects/presentation/pages/subject_detail_page.dart';
 
 class SubjectsPage extends StatelessWidget {
   const SubjectsPage({super.key});
@@ -25,11 +26,10 @@ class SubjectsPage extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 itemCount: state.subjects.length + 1,
                 itemBuilder: (context, index) {
-                  
-                  if(index == state.subjects.length) {
+                  if (index == state.subjects.length) {
                     return _buildAddSubjectCard(context);
                   }
-                  
+
                   final subject = state.subjects[index];
 
                   return Card(
@@ -42,9 +42,14 @@ class SubjectsPage extends StatelessWidget {
                         color: AppColors.inputFill.withValues(alpha: 0.5),
                       ),
                     ),
-                    
+
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        right: 16,
+                        top: 16,
+                        bottom: 8,
+                      ),
                       child: Column(
                         children: [
                           Row(
@@ -62,26 +67,26 @@ class SubjectsPage extends StatelessWidget {
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                 
-                                 Text(
-                                   "${subject['name']}",
-                                   style: TextStyle(
-                                     fontSize: 20,
-                                     color: AppColors.text,
-                                     fontWeight: FontWeight.bold,
-                                   ),
-                                 ),
-                                 
-                                 Text(
-                                   "${subject['units']} units",
-                                   style: TextStyle(
-                                     fontSize: 12,
-                                     color: AppColors.foreground,
-                                   ),
-                                 ),
+
+                                  Text(
+                                    "${subject['name']}",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      color: AppColors.text,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+
+                                  Text(
+                                    "${subject['units']} units",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.foreground,
+                                    ),
+                                  ),
                                 ],
                               ),
-                              
+
                               Stack(
                                 alignment: Alignment.center,
                                 children: [
@@ -95,7 +100,7 @@ class SubjectsPage extends StatelessWidget {
                                       backgroundColor: Colors.grey.shade200,
                                     ),
                                   ),
-                                  
+
                                   Text(
                                     "92%",
                                     style: TextStyle(
@@ -107,14 +112,11 @@ class SubjectsPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
-                          Divider(
-                            color: Colors.grey.withAlpha(80),
-                            height: 1
-                          ),
-                          
+
+                          Divider(color: Colors.grey.withAlpha(80), height: 1),
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -125,11 +127,18 @@ class SubjectsPage extends StatelessWidget {
                                   style: TextStyle(color: AppColors.brandBlue),
                                 ),
                               ),
-                              
+
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          SubjectDetailPage(subject: subject),
+                                    ),
+                                  );
+                                },
                                 child: Text(
-                                  "Manage Grading", 
+                                  "Manage Grading",
                                   style: TextStyle(color: AppColors.brandBlue),
                                 ),
                               ),
@@ -175,11 +184,7 @@ class SubjectsPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.add, 
-                size:32, 
-                color: Colors.blueGrey.shade400
-              ),
+              Icon(Icons.add, size: 32, color: Colors.blueGrey.shade400),
 
               const SizedBox(height: 8),
 
@@ -203,12 +208,10 @@ class _AddSubjectBottomSheet extends StatefulWidget {
   const _AddSubjectBottomSheet({super.key});
 
   @override
-  State<_AddSubjectBottomSheet> createState() =>
-      _AddSubjectBottomSheetState();
+  State<_AddSubjectBottomSheet> createState() => _AddSubjectBottomSheetState();
 }
 
-class _AddSubjectBottomSheetState
-    extends State<_AddSubjectBottomSheet> {
+class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _codeController = TextEditingController();
@@ -234,11 +237,7 @@ class _AddSubjectBottomSheetState
       'code': _codeController.text.trim(),
       'instructor': _profController.text.trim(), // match bloc mock key
       'units': int.parse(_unitsController.text.trim()),
-      'grades': {
-        'prelim': '--',
-        'midterm': '--',
-        'final': '--',
-      }
+      'grades': {'prelim': '--', 'midterm': '--', 'final': '--'},
     };
 
     context.read<SubjectBloc>().add(AddSubject(newSubject));
@@ -256,9 +255,7 @@ class _AddSubjectBottomSheetState
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(24),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SingleChildScrollView(
           child: Form(
@@ -293,7 +290,10 @@ class _AddSubjectBottomSheetState
 
                 TextFormField(
                   controller: _nameController,
-                  decoration: _inputDecoration("Subject Name", "e.g. Data Structures and Algorithms"),
+                  decoration: _inputDecoration(
+                    "Subject Name",
+                    "e.g. Data Structures and Algorithms",
+                  ),
                   validator: (value) =>
                       value == null || value.isEmpty ? "Required" : null,
                 ),
@@ -302,7 +302,10 @@ class _AddSubjectBottomSheetState
 
                 TextFormField(
                   controller: _profController,
-                  decoration: _inputDecoration("Instructor", "e.g. Christine Pena"),
+                  decoration: _inputDecoration(
+                    "Instructor",
+                    "e.g. Christine Pena",
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -314,7 +317,10 @@ class _AddSubjectBottomSheetState
                       flex: 2,
                       child: TextFormField(
                         controller: _codeController,
-                        decoration: _inputDecoration("Subject Code", "e.g. CIS 2101"),
+                        decoration: _inputDecoration(
+                          "Subject Code",
+                          "e.g. CIS 2101",
+                        ),
                         validator: (value) =>
                             value == null || value.isEmpty ? "Required" : null,
                       ),
@@ -333,7 +339,7 @@ class _AddSubjectBottomSheetState
                             return "Req."; // Shorter text for small fields
                           }
                           if (int.tryParse(value) == null) {
-                            return "NaN"; 
+                            return "NaN";
                           }
                           return null;
                         },
@@ -341,7 +347,7 @@ class _AddSubjectBottomSheetState
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24), // Moved outside the Row
 
                 SizedBox(
@@ -372,11 +378,13 @@ class _AddSubjectBottomSheetState
   }
 }
 
-
 InputDecoration _inputDecoration(String label, String hint) {
   return InputDecoration(
     labelText: label,
-    labelStyle: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+    labelStyle: const TextStyle(
+      color: AppColors.text,
+      fontWeight: FontWeight.w600,
+    ),
     hintText: hint,
     enabledBorder: UnderlineInputBorder(
       borderSide: BorderSide(color: Colors.grey),
