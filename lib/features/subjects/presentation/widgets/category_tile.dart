@@ -5,7 +5,7 @@ class CategoryTile extends StatelessWidget {
   final Map<String, dynamic> category;
   final VoidCallback onDelete;
 
-  const CategoryTile({required this.category, required this.onDelete});
+  const CategoryTile({ super.key, required this.category, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {

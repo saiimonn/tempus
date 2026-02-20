@@ -4,6 +4,7 @@ import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/custom_text_field.dart';
 import 'package:tempus/features/subjects/logic/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/subject_detail_page.dart';
+import 'package:tempus/features/subjects/presentation/pages/scores_page.dart';
 
 class SubjectsPage extends StatelessWidget {
   const SubjectsPage({super.key});
@@ -122,7 +123,14 @@ class SubjectsPage extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => 
+                                        ScoresPage(subject: subject),
+                                    ),
+                                  );
+                                },
                                 child: Text(
                                   "View Scores",
                                   style: TextStyle(color: AppColors.brandBlue),
