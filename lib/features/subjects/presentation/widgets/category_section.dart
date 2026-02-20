@@ -1,7 +1,6 @@
-//used in scores_page
+//used in scores_page -> _buildContent()
 import 'package:flutter/material.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/subjects/logic/scores_bloc.dart';
 import 'package:tempus/features/subjects/presentation/widgets/score_tile.dart';
 
 class CategorySection extends StatelessWidget {

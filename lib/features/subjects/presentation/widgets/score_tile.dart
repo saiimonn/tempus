@@ -1,4 +1,4 @@
-// used in category_section
+// used in category_section -> build()
 import 'package:flutter/material.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 
