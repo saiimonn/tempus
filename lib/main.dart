@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
+import 'package:tempus/features/onboarding/data/onboarding_service.dart';
+import 'package:tempus/features/onboarding/presentation/pages/onboarding.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +17,14 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_KEY']!,
   );
 
-  runApp(const MyApp());
+  final bool onboardingDone = await OnboardingService.isComplete('guest_or_global') ?? false;
+
+  runApp(MyApp(onboardingDone: onboardingDone));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool onboardingDone;
+  const MyApp({super.key, required this.onboardingDone});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,9 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xFF1A56DB),
         useMaterial3: true,
       ),
-      home: session != null ? const HomePage() : const LoginPage(),
+      home: !onboardingDone
+        ? const Onboarding()
+        : (session != null ? const HomePage() : const LoginPage()),
     );
   }
 }

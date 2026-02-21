@@ -4,8 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/onboarding/data/onboarding_service.dart';
-import 'package:tempus/features/onboarding/presentation/pages/onboarding.dart';
 import 'register_page.dart';
 import 'package:tempus/core/widgets/auth_background.dart';
 
@@ -48,15 +46,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
 
-        final done = await OnboardingService.isComplete(res.user!.id);
-
         if (!mounted) return;
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                done ? const HomePage() : const OnboardingPage(),
+            builder: (context) => const HomePage(),
           ),
         );
       }
@@ -87,14 +82,12 @@ class _LoginPageState extends State<LoginPage> {
         final userId = data.session?.user.id;
         if (userId == null) return;
 
-        final done = await OnboardingService.isComplete(userId);
         if (!mounted) return;
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                done ? const HomePage() : const OnboardingPage(),
+            builder: (context) => const HomePage(),
           ),
         );
       }
