@@ -6,20 +6,15 @@ A new Flutter project.
 
 ```
 lib/
- ├── core/
- │    ├── theme/
- │    │    ├── app_colors.dart
- │    │    └── app_input_theme.dart
- │    └── widgets/
- │         └── required_label.dart
- ├── features/
- │    ├── feature_name/
- │    │    ├── presentation/
- │    │    │    └── feature_name_page.dart
- │    │    ├── logic/
- │    │    │    └── feature_name_bloc.dart
- │    │    └── data/
- │    │         ├── feature_name_repository.dart
- │    │         └── feature_name_service.dart
- └── main.dart
+ ├── core/              # Global shared resources
+ │    ├── theme/        # App-wide styling and color palettes
+ │    └── widgets/      # Reusable UI components used across multiple features
+ ├── features/          # Feature-based modules
+ │    └── feature_name/ # Example of a single feature's internal structure
+ │         ├── data/    # Data layer: Models, API services, and repositories
+ │         ├── logic/   # Domain layer: BLoC files and state management
+ │         └── presentation/
+ │              ├── pages/    # Full screen views
+ │              └── widgets/  # UI components specific to this feature only
+ ├── main.dart          # Entry point, initialization, and root routing logic
 ```
