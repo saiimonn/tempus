@@ -1,108 +1,137 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gap/gap.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:tempus/features/onboarding/data/onboarding_service.dart';
-import 'package:tempus/features/home/presentation/pages/home_page.dart';
+import 'package:tempus/features/onboarding/logic/onboarding_bloc.dart';
+import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/onboarding/data/onboarding_model.dart';
 
-class OnboardingPage extends StatefulWidget {
-  const OnboardingPage({super.key});
-
-  @override
-  State<OnboardingPage> createState() => _OnboardingPageState();
-}
-
-class _OnboardingPageState extends State<OnboardingPage> {
-  final PageController _controller = PageController();
-  int _currentPage = 0;
+class Onboarding extends StatelessWidget {
+  const Onboarding({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _controller,
-            onPageChanged: (index) => setState(() => _currentPage = index),
-            itemCount: onboardingPages.length,
-            itemBuilder: (context, index) {
-              return _buildPage(onboardingPages[index]);
-            },
-          ),
+    final PageController controller = PageController();
 
-          Positioned(
-            bottom: 40,
-            left: 30,
-            right: 30,
-            child: Column(
-              children: [
-                SmoothPageIndicator(
-                  controller: _controller,
-                  count: onboardingPages.length,
-                  effect: ExpandingDotsEffect(
-                    activeDotColor: AppColors.brandBlue,
-                    dotColor: AppColors.foreground,
-                    dotHeight: 8,
-                    dotWidth: 8,
-                    expansionFactor: 4,
-                    spacing: 8,
+    return BlocProvider(
+      create: (context) => OnboardingBloc(),
+      child: BlocListener<OnboardingBloc, OnboardingState>(
+        listener: (context, state) {
+          if(state.isComplete) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          }
+        },
+        child: BlocBuilder<OnboardingBloc, OnboardingState>(
+          builder: (context, state) {
+            return Scaffold(
+              body: Stack(
+                children: [
+                  PageView.builder(
+                    controller: controller,
+                    onPageChanged: (index) => 
+                      context.read<OnboardingBloc>().add(PageChanged(index)),
+                    itemCount: onboardingPages.length,
+                    itemBuilder: (context, index) => 
+                      _buildPage(state.currentPage, onboardingPages[index]),
                   ),
-                ),
-
-                const SizedBox(height: 30),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _currentPage == onboardingPages.length - 1
-                        ? _buildActionButton("Done", () => _finish(context))
-                        : _buildActionButton("Skip", () => _finish(context)),
-
-                    _currentPage == onboardingPages.length - 1
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.chevron_right,
-                              color: AppColors.brandBlue,
-                              size: 28,
-                            ),
-                            onPressed: () => _finish(context),
-                          )
-                        : TextButton(
-                            onPressed: () {
-                              _controller.nextPage(
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeOutQuart,
-                              );
-                            },
-                            child: Row(
-                              children: const [
-                                Text(
-                                  "Next",
-                                  style: TextStyle(
-                                    color: AppColors.brandBlue,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right,
-                                  color: AppColors.brandBlue,
-                                  size: 20,
-                                ),
-                              ],
-                            ),
+                  Positioned(
+                    bottom: 40,
+                    left: 30,
+                    right: 30,
+                    child: Column(
+                      children: [
+                        SmoothPageIndicator(
+                          controller: controller,
+                          count: onboardingPages.length,
+                          effect: const ExpandingDotsEffect(
+                            activeDotColor: AppColors.brandBlue,
+                            dotColor: AppColors.foreground,
+                            dotHeight: 8,
+                            dotWidth: 8,
+                            expansionFactor: 4,
+                            spacing: 8,
                           ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+                        ),
+
+                        Gap(30),
+                        _buildFooter(context, state, controller),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildPage(OnboardingItem item) {
+  Widget _buildFooter(
+    BuildContext context,
+    OnboardingState state,
+    PageController controller,
+  ) {
+    final isLastPage = state.currentPage == onboardingPages.length - 1;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildActionButton(
+          isLastPage ? "Done" : "Skip",
+          () => context.read<OnboardingBloc>().add(CompleteOnboarding()),
+        ),
+
+        if(isLastPage) 
+          IconButton(
+            icon: const Icon(
+              Icons.chevron_right,
+              color: AppColors.brandBlue,
+              size: 28,
+            ),
+            onPressed: () =>
+              context.read<OnboardingBloc>().add(CompleteOnboarding()),
+          )
+        else
+          TextButton(
+            onPressed: () => controller.nextPage(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutQuart,
+            ),
+            child: Row(
+              children: const [
+                Text(
+                  "Next",
+                  style: TextStyle(
+                    color: AppColors.brandBlue,
+                    fontSize: 16,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.brandBlue,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPage(int currentPage, OnboardingItem item) {
+
+    final List<IconData> pageIcons = [
+      Icons.auto_awesome,
+      Icons.task_alt,
+      Icons.calendar_today,
+      Icons.account_balance_wallet,
+      Icons.calculate,
+    ];
+
     return Container(
       margin: const EdgeInsets.only(top: 40),
       decoration: const BoxDecoration(
@@ -117,16 +146,23 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 10),
-                  Text(
-                    _currentPage == 0 ? "LOGO HERE" : "ICON HERE",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
+                  Gap(10),
+
+                  currentPage == 0
+                    ? Image.asset(
+                      'assets/images/tempuslogo.png',
+                      height: 120,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.timer,
+                        color: AppColors.brandBlue,
+                        size: 100,
+                      ),
+                    )
+                    : Icon(
+                      pageIcons[currentPage],
                       color: AppColors.brandBlue,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w500,
+                      size: 100,
                     ),
-                  ),
                 ],
               ),
             ),
@@ -149,11 +185,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 15),
+                  Gap(15),
 
                   Text(
                     item.desc,
-                    style: TextStyle(fontSize: 16, color: AppColors.foreground),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.foreground,
+                    ),
                   ),
                 ],
               ),
@@ -176,21 +215,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
       ),
       child: Text(
         label,
-        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
       ),
-    );
-  }
-
-  void _finish(BuildContext context) async {
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId != null) {
-      await OnboardingService.markComplete(userId);
-    }
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomePage()),
     );
   }
 }
