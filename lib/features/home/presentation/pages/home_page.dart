@@ -9,7 +9,7 @@ import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
-import 'package:tempus/features/home/presentation/pages/schedule_page.dart';
+import 'package:tempus/features/schedule/presentation/pages/schedule_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

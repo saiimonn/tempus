@@ -68,7 +68,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
 
   Future<void> _onLoad(
     LoadSchedule event,
-    Emitter<ScheduleState> state,
+    Emitter<ScheduleState> emit,
   ) async {
     emit(ScheduleLoading());
     await Future.delayed(Duration(milliseconds: 500));
@@ -107,7 +107,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
 
   void _onAdd(
     AddScheduleEntry event,
-    Emitter<ScheduleState> state,
+    Emitter<ScheduleState> emit,
   ) {
     if(state is! ScheduleLoaded) return;
 
@@ -131,7 +131,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
 
   void _onDelete(
     DeleteScheduleEntry event,
-    Emitter<ScheduleState> state,
+    Emitter<ScheduleState> emit,
   ) {
     if (state is! ScheduleLoaded) return;
     
