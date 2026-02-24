@@ -219,7 +219,7 @@ class SubjectsPage extends StatelessWidget {
 }
 
 class _AddSubjectBottomSheet extends StatefulWidget {
-  const _AddSubjectBottomSheet({super.key});
+  const _AddSubjectBottomSheet();
 
   @override
   State<_AddSubjectBottomSheet> createState() => _AddSubjectBottomSheetState();
@@ -386,21 +386,4 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
       ),
     );
   }
-}
-
-InputDecoration _inputDecoration(String label, String hint) {
-  return InputDecoration(
-    labelText: label,
-    labelStyle: const TextStyle(
-      color: AppColors.text,
-      fontWeight: FontWeight.w600,
-    ),
-    hintText: hint,
-    enabledBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.grey),
-    ),
-    focusedBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: Colors.blue, width: 2.0),
-    ),
-  );
 }
