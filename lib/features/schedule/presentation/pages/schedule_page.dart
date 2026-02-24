@@ -1,10 +1,8 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
-import 'package:tempus/features/schedule/data/schedule_model.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_button.dart';
 import 'package:tempus/features/schedule/presentation/widgets/empty_schedule.dart';
 import 'package:tempus/features/schedule/presentation/widgets/schedule_entry_card.dart';

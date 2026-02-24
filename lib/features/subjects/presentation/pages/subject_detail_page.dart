@@ -25,7 +25,7 @@ class SubjectDetailPage extends StatelessWidget {
 class _SubjectDetailView extends StatelessWidget {
   final Map<String, dynamic> subject;
 
-  const _SubjectDetailView({super.key, required this.subject});
+  const _SubjectDetailView({required this.subject});
 
   @override
   Widget build(BuildContext context) {

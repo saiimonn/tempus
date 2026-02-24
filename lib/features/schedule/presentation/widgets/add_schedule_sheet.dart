@@ -131,7 +131,7 @@ class AddScheduleSheetBody extends StatelessWidget {
 class _SubjectDropdown extends StatelessWidget {
   final List<Map<String, dynamic>> subjects;
 
-  const _SubjectDropdown({super.key, required this.subjects});
+  const _SubjectDropdown({required this.subjects});
 
   @override
   Widget build(BuildContext context) {
