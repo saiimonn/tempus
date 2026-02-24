@@ -84,7 +84,7 @@ class ScheduleContent extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TimeTableGrid(entries: state.entries),
+              child: DayViewTimetable(state: state),
             ),
           ),
 
@@ -98,7 +98,7 @@ class ScheduleContent extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.foreground,
+                  color: AppColors.text,
                 ),
               ),
             ),
@@ -109,16 +109,16 @@ class ScheduleContent extends StatelessWidget {
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, i) {
-              final entry = state.entries[i];
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: ScheduleEntryCard(entry: entry),
-              );
-            },
+                final entry = state.entries[i];
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: ScheduleEntryCard(entry: entry),
+                );
+              },
               childCount: state.entries.length,
             ),
           ),
-          
+
           const SliverToBoxAdapter(child: Gap(40)),
         ],
       ],

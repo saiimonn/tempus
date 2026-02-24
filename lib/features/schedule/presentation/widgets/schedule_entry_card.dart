@@ -156,7 +156,7 @@ class ScheduleEntryCard extends StatelessWidget {
                       icon: Icon(
                         Icons.delete_outline,
                         size: 20,
-                        color: Colors.grey.shade400,
+                        color: AppColors.foreground,
                       ),
                       onPressed: () {
                         context
