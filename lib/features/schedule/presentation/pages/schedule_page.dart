@@ -7,6 +7,8 @@ import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
 import 'package:tempus/features/schedule/data/schedule_model.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_button.dart';
 import 'package:tempus/features/schedule/presentation/widgets/empty_schedule.dart';
+import 'package:tempus/features/schedule/presentation/widgets/schedule_entry_card.dart';
+import 'package:tempus/features/schedule/presentation/widgets/time_table_grid.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});
@@ -40,8 +42,8 @@ class ScheduleView extends StatelessWidget {
           }
 
           return const Center(child: Text("Failed to load schedule."));
-        }
-      )
+        },
+      ),
     );
   }
 }
@@ -75,12 +77,53 @@ class ScheduleContent extends StatelessWidget {
           ),
         ),
 
-        if(state.entries.isEmpty)
+        if (state.entries.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptySchedule(subject: state.subjects)
+            child: EmptySchedule(subject: state.subjects),
           )
-      ]
+        else ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TimeTableGrid(entries: state.entries),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: Gap(24)),
+
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Classes",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.foreground,
+                ),
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: Gap(12)),
+
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, i) {
+              final entry = state.entries[i];
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: ScheduleEntryCard(entry: entry),
+              );
+            },
+              childCount: state.entries.length,
+            ),
+          ),
+          
+          const SliverToBoxAdapter(child: Gap(40)),
+        ],
+      ],
     );
   }
 }

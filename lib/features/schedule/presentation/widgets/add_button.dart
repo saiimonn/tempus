@@ -1,4 +1,4 @@
-// used in schedul_page.dart -> ScheduleContent()
+// used in schedule_page.dart -> ScheduleContent()
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
