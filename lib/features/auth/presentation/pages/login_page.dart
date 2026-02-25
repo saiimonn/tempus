@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; //
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
+import 'package:tempus/features/auth/logic/password_visibility_bloc.dart'; //
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'register_page.dart';
@@ -74,145 +76,135 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
-      if (data.event == AuthChangeEvent.signedIn && mounted) {
-        final userId = data.session?.user.id;
-        if (userId == null) return;
-
-        if (!mounted) return;
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const HomePage(),
-          ),
-        );
-      }
-    });
-  }
-
-  // --- UI BUILD ---
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      resizeToAvoidBottomInset: false,
-      body: AuthBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 80, left: 40, right: 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- LOGO & TITLE ---
-                Center(
-                  child: Column(
-                    children: [
-                      Image.asset('assets/images/logo.png', height: 50),
-                      const SizedBox(height: 24),
-
-                      WText(
-                        "Sign in",
-                        className: 'text-4xl tracking-tighter',
-                        style: const TextStyle(color: AppColors.text),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // --- INPUTS ---
-                _buildLabel("ID Number"),
-                const SizedBox(height: 8),
-                _buildInput(
-                  controller: _idController,
-                  hint: "Enter your school ID",
-                  isNumber: true,
-                ),
-
-                const SizedBox(height: 16),
-
-                _buildLabel("Password"),
-                const SizedBox(height: 8),
-                _buildInput(
-                  controller: _passwordController,
-                  hint: "Enter your password",
-                  isPassword: true,
-                ),
-
-                const SizedBox(height: 30),
-
-                // --- BUTTON ---
-                GestureDetector(
-                  onTap: _isLoading ? null : _signIn,
-                  child: Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: AppColors.brandBlue,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.brandBlue.withValues(alpha: 0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+    // Provide the Bloc at the top of the build method or wrap the specific column
+    return BlocProvider(
+      create: (context) => PasswordVisibilityBloc(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        resizeToAvoidBottomInset: false,
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 80, left: 40, right: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset('assets/images/logo.png', height: 50),
+                        const SizedBox(height: 24),
+                        WText(
+                          "Sign in",
+                          className: 'text-4xl tracking-tighter',
+                          style: const TextStyle(color: AppColors.text),
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                  ),
+                  const SizedBox(height: 32),
+
+                  _buildLabel("ID Number"),
+                  const SizedBox(height: 8),
+                  _buildInput(
+                    controller: _idController,
+                    hint: "Enter your school ID",
+                    isNumber: true,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildLabel("Password"),
+                  const SizedBox(height: 8),
+                  // Use BlocBuilder to rebuild only the password field when visibility toggles
+                  BlocBuilder<PasswordVisibilityBloc, bool>(
+                    builder: (context, isVisible) {
+                      return _buildInput(
+                        controller: _passwordController,
+                        hint: "Enter your password",
+                        isPassword: !isVisible, // If state is false, obscure the text
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            isVisible ? Icons.visibility : Icons.visibility_off,
+                            color: AppColors.foreground,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            // Dispatch event to toggle visibility
+                            context.read<PasswordVisibilityBloc>().add(ToggleVisibility());
+                          },
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  GestureDetector(
+                    onTap: _isLoading ? null : _signIn,
+                    child: Container(
+                      width: double.infinity,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppColors.brandBlue,
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.brandBlue.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const WText(
+                                "Continue",
+                                className: 'text-base font-bold text-white',
                               ),
-                            )
-                          : const WText(
-                              "Continue",
-                              className: 'text-base font-bold text-white',
-                            ),
+                      ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // --- FOOTER ---
-                Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      const WText(
-                        "No account? ",
-                        className: 'text-sm',
-                        style: TextStyle(color: AppColors.text),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterPage(),
-                            ),
-                          );
-                        },
-                        child: const WText(
-                          "Sign up",
-                          className: 'text-sm font-bold',
-                          style: TextStyle(color: AppColors.brandBlue),
+                  const SizedBox(height: 24),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const WText(
+                          "No account? ",
+                          className: 'text-sm',
+                          style: TextStyle(color: AppColors.text),
                         ),
-                      ),
-                    ],
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterPage(),
+                              ),
+                            );
+                          },
+                          child: const WText(
+                            "Sign up",
+                            className: 'text-sm font-bold',
+                            style: TextStyle(color: AppColors.brandBlue),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -220,7 +212,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // --- HELPER WIDGETS ---
   Widget _buildLabel(String text) {
     return Align(
       alignment: Alignment.centerLeft,
@@ -232,11 +223,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // Updated helper to include suffixIcon parameter
   Widget _buildInput({
     required TextEditingController controller,
     required String hint,
     bool isPassword = false,
     bool isNumber = false,
+    Widget? suffixIcon, // Added this
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -248,14 +241,13 @@ class _LoginPageState extends State<LoginPage> {
         controller: controller,
         obscureText: isPassword,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        inputFormatters: isNumber
-            ? [FilteringTextInputFormatter.digitsOnly]
-            : [],
+        inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
         style: const TextStyle(color: AppColors.text),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: AppColors.foreground, fontSize: 14),
           border: InputBorder.none,
+          suffixIcon: suffixIcon, // Added this
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 14,
