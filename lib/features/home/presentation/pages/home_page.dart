@@ -51,8 +51,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final nameSplit = user?.userMetadata?['full_name'].split(' ');
-    final String name = nameSplit[0];
+    final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
+    final String name = fullName.split(' ').first;
+    // final nameSplit = user?.userMetadata?['full_name'].split(' ');
+    // final String name = nameSplit[0];
     final DateTime now = DateTime.now();
     final date = DateFormat.yMMMMd('en_US').format(now);
 

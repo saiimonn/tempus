@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Added
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
+import 'package:tempus/features/auth/logic/password_visibility_bloc.dart'; // Added
 
 // --- YOUR IMPORTS ---
 import 'package:tempus/core/theme/app_colors.dart';
@@ -64,7 +66,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // --- LOGIC: Sign Up ---
   Future<void> _signUp() async {
-    // Basic Empty Checks
     if (_idController.text.isEmpty || _passwordController.text.isEmpty) {
       _showError("Please fill in all fields");
       return;
@@ -80,8 +81,6 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       final fullEmail = "${_idController.text.trim()}$_schoolDomain";
 
-      //Store the extra details in 'data' (raw_user_meta_data)
-      //Maps directly to the jsonb column in auth.users table
       final AuthResponse res = await Supabase.instance.client.auth.signUp(
         email: fullEmail,
         password: _passwordController.text,
@@ -95,15 +94,12 @@ class _RegisterPageState extends State<RegisterPage> {
       if (res.user != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: WText(
-              'Account Created! Please check your email.',
-              className: 'text-white',
-            ),
+            content: WText('Account Created! Please check your email.', className: 'text-white'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 4),
           ),
         );
-        Navigator.pop(context); // Go back to Login Page
+        Navigator.pop(context);
       }
     } on AuthException catch (e) {
       if (mounted) _showError(e.message);
@@ -133,62 +129,54 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _currentStep = 2);
   }
 
-  // --- UI BUILD ---
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      resizeToAvoidBottomInset: false,
-      body: AuthBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(
-              top: 40,
-              left: 40,
-              right: 40,
-              bottom: 40,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // --- HEADER: Logo & Title ---
-                IconButton(
-                  onPressed: () {
-                    if (_currentStep == 2) {
-                      setState(() => _currentStep = 1);
-                    } else {
-                      Navigator.pop(context);
-                    }
-                  },
-                  icon: const Icon(Icons.arrow_back, color: AppColors.text),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                ),
-
-                const SizedBox(height: 10),
-
-                Center(
-                  child: Column(
-                    children: [
-                      Image.asset('assets/images/logo.png', height: 40),
-                      const SizedBox(height: 20),
-                      WText(
-                        "Create your details",
-                        className:
-                            'text-3xl font-black tracking-tighter text-center',
-                        style: const TextStyle(color: AppColors.text),
-                      ),
-                    ],
+    // Provide the Bloc to the entire page
+    return BlocProvider(
+      create: (context) => PasswordVisibilityBloc(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        resizeToAvoidBottomInset: false,
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 40, left: 40, right: 40, bottom: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      if (_currentStep == 2) {
+                        setState(() => _currentStep = 1);
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_back, color: AppColors.text),
+                    padding: EdgeInsets.zero,
+                    alignment: Alignment.centerLeft,
                   ),
-                ),
-
-                const SizedBox(height: 30),
-
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: _currentStep == 1 ? _buildStep1() : _buildStep2(),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Column(
+                      children: [
+                        Image.asset('assets/images/logo.png', height: 40),
+                        const SizedBox(height: 20),
+                        WText(
+                          "Create your details",
+                          className: 'text-3xl font-black tracking-tighter text-center',
+                          style: const TextStyle(color: AppColors.text),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: _currentStep == 1 ? _buildStep1() : _buildStep2(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -196,7 +184,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  // Personal Info
   Widget _buildStep1() {
     return Column(
       key: const ValueKey(1),
@@ -206,7 +193,6 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 8),
         _buildInput(controller: _fullNameController, hint: "e.g. John Doe"),
         const SizedBox(height: 16),
-
         Row(
           children: [
             Expanded(
@@ -242,9 +228,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ],
         ),
-
         const SizedBox(height: 40),
-
         _buildButton(text: "Next", onTap: _goToStep2),
       ],
     );
@@ -262,28 +246,32 @@ class _RegisterPageState extends State<RegisterPage> {
           hint: "Enter your school ID",
           isNumber: true,
         ),
-
         const SizedBox(height: 16),
-
         _buildLabel("Password"),
         const SizedBox(height: 8),
-        _buildInput(
-          controller: _passwordController,
-          hint: "Enter your password",
-          isPassword: true,
+        // Use BlocBuilder to manage visibility state
+        BlocBuilder<PasswordVisibilityBloc, bool>(
+          builder: (context, isVisible) {
+            return _buildInput(
+              controller: _passwordController,
+              hint: "Enter your password",
+              isPassword: !isVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  isVisible ? Icons.visibility : Icons.visibility_off,
+                  color: AppColors.foreground,
+                  size: 20,
+                ),
+                onPressed: () => context.read<PasswordVisibilityBloc>().add(ToggleVisibility()),
+              ),
+            );
+          },
         ),
-
         const SizedBox(height: 20),
-
         _buildValidationItem(_isLengthValid, "Use 8 to 20 characters"),
         const SizedBox(height: 6),
-        _buildValidationItem(
-          _isComplexityValid,
-          "Use 2 of the following: letters, numbers, or symbols",
-        ),
-
+        _buildValidationItem(_isComplexityValid, "Use 2 of the following: letters, numbers, or symbols"),
         const SizedBox(height: 40),
-
         _buildButton(
           text: "Create Account",
           onTap: _isLoading ? null : _signUp,
@@ -294,11 +282,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   // --- HELPER WIDGETS ---
-  Widget _buildButton({
-    required String text,
-    VoidCallback? onTap,
-    bool isLoading = false,
-  }) {
+  Widget _buildButton({required String text, VoidCallback? onTap, bool isLoading = false}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -317,14 +301,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         child: Center(
           child: isLoading
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : WText(text, className: 'text-base font-bold text-white'),
         ),
       ),
@@ -345,9 +322,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: WText(
             text,
             className: 'text-xs',
-            style: TextStyle(
-              color: isValid ? Colors.green : AppColors.foreground,
-            ),
+            style: TextStyle(color: isValid ? Colors.green : AppColors.foreground),
           ),
         ),
       ],
@@ -355,11 +330,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildLabel(String text) {
-    return WText(
-      text,
-      className: 'text-sm font-bold',
-      style: const TextStyle(color: AppColors.text),
-    );
+    return WText(text, className: 'text-sm font-bold', style: const TextStyle(color: AppColors.text));
   }
 
   Widget _buildInput({
@@ -368,6 +339,7 @@ class _RegisterPageState extends State<RegisterPage> {
     bool isPassword = false,
     bool isNumber = false,
     List<TextInputFormatter>? customFormatters,
+    Widget? suffixIcon, // Added
   }) {
     List<TextInputFormatter> formatters = customFormatters ?? [];
     if (customFormatters == null && isNumber) {
@@ -390,10 +362,8 @@ class _RegisterPageState extends State<RegisterPage> {
           hintText: hint,
           hintStyle: const TextStyle(color: AppColors.foreground, fontSize: 14),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          suffixIcon: suffixIcon, // Added
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
