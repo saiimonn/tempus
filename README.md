@@ -31,6 +31,7 @@ lib/
             │   └── sample_page.dart
             └── widgets/
                 └── sample_avatar.dart
+```
 
 ### Domain Layer (Business Logic)
 - **entities/sample_entity.dart** | Pure data object for the UI.
@@ -48,4 +49,3 @@ lib/
 - **bloc/sample_bloc.dart** | Logic: Events → UseCases → States.
 - **pages/sample_page.dart** | The main screen/Scaffold widget.
 - **widgets/sample_avatar.dart** | Small, reusable UI components.
-```
