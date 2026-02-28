@@ -18,3 +18,8 @@ class TaskDeleteRequested extends TaskEvent {
   final int taskId;
   TaskDeleteRequested(this.taskId);
 }
+
+class TaskSectionToggled extends TaskEvent {
+  final String sectionName;
+  TaskSectionToggled(this.sectionName);
+}

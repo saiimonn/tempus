@@ -28,6 +28,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     on<TaskAddRequested>(_onAdd);
     on<TaskToggleCompleted>(_onToggleCompleted);
     on<TaskDeleteRequested>(_onDelete);
+    on<TaskSectionToggled>(_onSectionToggled);
   }
 
   Future <void> _onLoad(
@@ -54,7 +55,7 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     try {
       final added = await _addTask(event.task);
-      emit(TaskLoaded([...curr.tasks, added]));
+      emit(curr.copyWith(tasks: [...curr.tasks, added]));
     } catch(_) {
       emit(TaskError('Failed to add task'));
     }
@@ -73,12 +74,12 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     );
 
     final updatedList = curr.tasks.map((t) => t.id == event.taskId ? updated : t).toList();
-    emit(TaskLoaded(updatedList));
+    emit(curr.copyWith(tasks: updatedList));
 
     try {
       await _updateTask(updated);
-    } catch(_) {
-      emit(TaskLoaded(curr.tasks));
+    } catch (_) {
+      emit(curr);
     }
   }
 
@@ -92,10 +93,30 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     try {
       await _deleteTask(event.taskId);
-      emit(TaskLoaded(curr.tasks.where((t) => t.id != event.taskId).toList()));
+      emit(curr.copyWith(
+        tasks: curr.tasks.where((t) => t.id != event.taskId).toList(),
+      ));
     } catch(_) {
       emit(TaskError('Failed to  delete task'));
     }
+  }
+
+  void _onSectionToggled(
+    TaskSectionToggled event,
+    Emitter<TaskState> emit,
+  ) {
+    if (state is! TaskLoaded) return;
+
+    final curr = state as TaskLoaded;
+    final expanded = Set<String>.from(curr.expandedSections);
+
+    if (expanded.contains(event.sectionName)) {
+      expanded.remove(event.sectionName);
+    } else {
+      expanded.add(event.sectionName);
+    }
+
+    emit(curr.copyWith(expandedSections: expanded));
   }
 
 }

@@ -11,12 +11,12 @@ class TaskEntity {
   const TaskEntity({
     required this.id,
     required this.title,
-    required this.dueDate,
-    required this.dueTime,
-    required this.status,
-    required this.subId,
-    required this.subjectName,
-    required this.subjectCode,
+    this.dueDate,
+    this.dueTime,
+    this.status = 'pending',
+    this.subId,
+    this.subjectName,
+    this.subjectCode,
   });
 
   bool get isComplete => status == 'completed';

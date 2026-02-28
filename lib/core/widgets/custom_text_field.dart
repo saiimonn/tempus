@@ -8,6 +8,9 @@ class CustomTextField extends StatelessWidget {
   final String hint;
   final bool isDecimal;
   final String? Function(String?)? validator;
+  final bool autofocus;
+  final ValueChanged<String>? onFieldSubmitted;
+  final TextInputAction textInputAction;
 
   const CustomTextField({
     super.key,
@@ -16,6 +19,9 @@ class CustomTextField extends StatelessWidget {
     required this.hint,
     this.isDecimal = false,
     this.validator,
+    this.autofocus = false,
+    this.onFieldSubmitted,
+    this.textInputAction = TextInputAction.done,
   });
 
   @override
@@ -36,9 +42,12 @@ class CustomTextField extends StatelessWidget {
 
         TextFormField(
           controller: controller,
+          autofocus: autofocus,
           keyboardType: isDecimal ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
           inputFormatters: isDecimal ? [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))] : null,
           validator: validator,
+          textInputAction: textInputAction,
+          onFieldSubmitted: onFieldSubmitted,
           style: const TextStyle(fontSize: 15),
           decoration: InputDecoration(
             hintText: hint,
