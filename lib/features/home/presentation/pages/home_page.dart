@@ -22,6 +22,14 @@ import 'package:tempus/features/subjects/domain/use_cases/get_subjects.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
 import 'package:tempus/features/schedule/presentation/pages/schedule_page.dart';
+import 'package:tempus/features/tasks/data/data_sources/task_local_data_source.dart';
+import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
+import 'package:tempus/features/tasks/domain/use_cases/add_task.dart';
+import 'package:tempus/features/tasks/domain/use_cases/delete_task.dart';
+import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
+import 'package:tempus/features/tasks/domain/use_cases/update_task.dart';
+import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
+import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -133,7 +141,20 @@ class _HomePageState extends State<HomePage> {
             child: const SchedulePage(),
           ),
 
-          const Center(child: Text("Tasks Page")),
+          BlocProvider<TaskBloc>(
+            create: (_) {
+              final repo = TaskRepositoryImpl(TaskLocalDataSource());
+              return TaskBloc(
+                getTasks: GetTasks(repo),
+                addTask: AddTask(repo),
+                updateTasks: UpdateTask(repo),
+                deleteTasks: DeleteTask(repo),
+              )..add(TaskLoadRequested());
+            },
+            child: const TasksPage(),
+          ),
+
+
           const Center(child: Text("Finances Page")),
           
           BlocProvider<SubjectBloc>(
