@@ -2,13 +2,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/schedule/data/schedule_model.dart';
-import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
-class DayViewTimetable extends StatelessWidget {
+class TimetableGrid extends StatelessWidget {
   final ScheduleLoaded state;
 
-  const DayViewTimetable({super.key, required this.state});
+  const TimetableGrid({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +29,13 @@ class DayViewTimetable extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Day navigation header
+// ---------------------------------------------------------------------------
+
 class _DayNavHeader extends StatelessWidget {
   final ScheduleLoaded state;
+
   static const _abbr = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const _DayNavHeader({required this.state});
@@ -40,8 +45,6 @@ class _DayNavHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final idx = state.selectedDayIndex;
-    final canPrev = idx > 0;
-    final canNext = idx < 6;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
@@ -49,10 +52,11 @@ class _DayNavHeader extends StatelessWidget {
         children: [
           _NavArrow(
             icon: Icons.chevron_left_rounded,
-            enabled: canPrev,
-            onTap: () => context.read<ScheduleBloc>().add(NavigateDayPrev()),
+            enabled: idx > 0,
+            onTap: () => context
+                .read<ScheduleBloc>()
+                .add(ScheduleDayPrevRequested()),
           ),
-
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -61,8 +65,9 @@ class _DayNavHeader extends StatelessWidget {
                 final today = _isToday(i);
 
                 return GestureDetector(
-                  onTap: () =>
-                      context.read<ScheduleBloc>().add(SelectDay(i)),
+                  onTap: () => context
+                      .read<ScheduleBloc>()
+                      .add(ScheduleDaySelected(i)),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     width: 36,
@@ -107,11 +112,12 @@ class _DayNavHeader extends StatelessWidget {
               }),
             ),
           ),
-
           _NavArrow(
             icon: Icons.chevron_right_rounded,
-            enabled: canNext,
-            onTap: () => context.read<ScheduleBloc>().add(NavigateDayNext()),
+            enabled: idx < 6,
+            onTap: () => context
+                .read<ScheduleBloc>()
+                .add(ScheduleDayNextRequested()),
           ),
         ],
       ),
@@ -146,6 +152,10 @@ class _NavArrow extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Day timeline
+// ---------------------------------------------------------------------------
+
 class _DayTimeline extends StatelessWidget {
   final ScheduleLoaded state;
 
@@ -178,18 +188,18 @@ class _DayTimeline extends StatelessWidget {
     return '$dh:${p[1]} $period';
   }
 
-  Color _entryColor(ScheduleEntry e) {
+  Color _entryColor(ScheduleEntryEntity e) {
     final key = '${e.subjectCode}|${e.subId}';
     final hue = key.hashCode.abs() % 360;
     return HSVColor.fromAHSV(1, hue.toDouble(), 0.60, 0.82).toColor();
   }
 
-  List<_PositionedEntry> _resolve(List<ScheduleEntry> entries) {
+  List<_PositionedEntry> _resolve(List<ScheduleEntryEntity> entries) {
     if (entries.isEmpty) return [];
 
     final sorted = [...entries]
-      ..sort((a, b) =>
-          _toOffset(a.startTime).compareTo(_toOffset(b.startTime)));
+      ..sort(
+          (a, b) => _toOffset(a.startTime).compareTo(_toOffset(b.startTime)));
 
     final List<double> colEnds = [];
     final Map<int, int> colMap = {};
@@ -245,22 +255,23 @@ class _DayTimeline extends StatelessWidget {
             height: gridHeight,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final eventsWidth = constraints.maxWidth - _timeColWidth - 8;
+                final eventsWidth =
+                    constraints.maxWidth - _timeColWidth - 8;
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Time labels column
                     SizedBox(
                       width: _timeColWidth,
                       child: Stack(
                         children: List.generate(_totalHours + 1, (i) {
-                          final h = _startHour + i;
                           return Positioned(
                             top: i * _hourHeight - 7.0,
                             left: 0,
                             right: 4,
                             child: Text(
-                              _fmtHour(h),
+                              _fmtHour(_startHour + i),
                               textAlign: TextAlign.right,
                               style: TextStyle(
                                 fontSize: 9.5,
@@ -274,10 +285,12 @@ class _DayTimeline extends StatelessWidget {
                       ),
                     ),
 
+                    // Events column
                     SizedBox(
                       width: eventsWidth,
                       child: Stack(
                         children: [
+                          // Hour dividers
                           ...List.generate(
                             _totalHours + 1,
                             (i) => Positioned(
@@ -292,6 +305,7 @@ class _DayTimeline extends StatelessWidget {
                             ),
                           ),
 
+                          // Half-hour dividers
                           ...List.generate(
                             _totalHours,
                             (i) => Positioned(
@@ -306,6 +320,7 @@ class _DayTimeline extends StatelessWidget {
                             ),
                           ),
 
+                          // Empty state
                           if (entries.isEmpty)
                             Positioned(
                               top: gridHeight / 2 - 40,
@@ -332,6 +347,7 @@ class _DayTimeline extends StatelessWidget {
                               ),
                             ),
 
+                          // Entry blocks
                           ...positioned.map((p) {
                             final colWidth = eventsWidth / p.totalCols;
                             final left = p.col * colWidth + 2;
@@ -355,7 +371,8 @@ class _DayTimeline extends StatelessWidget {
                                   vertical: 5,
                                 ),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       p.entry.subjectCode,
@@ -372,8 +389,7 @@ class _DayTimeline extends StatelessWidget {
                                         '${p.startLabel} – ${p.endLabel}',
                                         style: TextStyle(
                                           fontSize: 10,
-                                          color:
-                                              tc.withValues(alpha: 0.85),
+                                          color: tc.withValues(alpha: 0.85),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -399,8 +415,12 @@ class _DayTimeline extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Internal layout model
+// ---------------------------------------------------------------------------
+
 class _PositionedEntry {
-  final ScheduleEntry entry;
+  final ScheduleEntryEntity entry;
   final double top;
   final double height;
   final int col;

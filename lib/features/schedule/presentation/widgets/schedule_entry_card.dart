@@ -1,51 +1,42 @@
-// used in schedule_page.dart -> ScheduleContent()
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/schedule/data/schedule_model.dart';
-import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
 class ScheduleEntryCard extends StatelessWidget {
-  final ScheduleEntry entry;
+  final ScheduleEntryEntity entry;
 
   const ScheduleEntryCard({super.key, required this.entry});
 
-  String fmtTime(String t) {
+  String _fmtTime(String t) {
     final parts = t.split(':');
     final h = int.parse(parts[0]);
-    final m = parts[1];
     final period = h >= 12 ? 'PM' : 'AM';
     final displayH = h == 0 ? 12 : (h > 12 ? h - 12 : h);
-    return '$displayH:$m $period';
+    return '$displayH:${parts[1]} $period';
   }
-  
+
   String get _dayLabel {
     const abbr = {
-      'Monday' : 'Mon',
-      'Tuesday' : 'Tue',
+      'Monday': 'Mon',
+      'Tuesday': 'Tue',
       'Wednesday': 'Wed',
       'Thursday': 'Thu',
       'Friday': 'Fri',
       'Saturday': 'Sat',
       'Sunday': 'Sun',
     };
-    
     const order = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday'
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
     ];
-    
     final sorted = [...entry.days]
       ..sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
     return sorted.map((d) => abbr[d]).join(', ');
   }
-  
+
   Color get _entryColor {
     final key = '${entry.subjectCode}|${entry.subId}';
     final h = key.hashCode.abs() % 360;
@@ -55,14 +46,13 @@ class ScheduleEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _entryColor;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
-      
       child: IntrinsicHeight(
         child: Row(
           children: [
@@ -75,10 +65,10 @@ class ScheduleEntryCard extends StatelessWidget {
                 ),
               ),
             ),
-            
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
                     Expanded(
@@ -93,9 +83,7 @@ class ScheduleEntryCard extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          
-                          Gap(2),
-                          
+                          const Gap(2),
                           Text(
                             entry.subjectName,
                             style: const TextStyle(
@@ -104,9 +92,7 @@ class ScheduleEntryCard extends StatelessWidget {
                               color: AppColors.text,
                             ),
                           ),
-                          
-                          Gap(4),
-                          
+                          const Gap(4),
                           Row(
                             children: [
                               const Icon(
@@ -114,11 +100,9 @@ class ScheduleEntryCard extends StatelessWidget {
                                 size: 12,
                                 color: AppColors.foreground,
                               ),
-                              
-                              Gap(4),
-                              
+                              const Gap(4),
                               Text(
-                                "${fmtTime(entry.startTime)} - ${fmtTime(entry.endTime)}",
+                                '${_fmtTime(entry.startTime)} - ${_fmtTime(entry.endTime)}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.foreground,
@@ -126,9 +110,7 @@ class ScheduleEntryCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          
-                          Gap(2),
-                          
+                          const Gap(2),
                           Row(
                             children: [
                               const Icon(
@@ -136,9 +118,7 @@ class ScheduleEntryCard extends StatelessWidget {
                                 size: 12,
                                 color: AppColors.foreground,
                               ),
-                              
-                              Gap(4),
-                              
+                              const Gap(4),
                               Text(
                                 _dayLabel,
                                 style: const TextStyle(
@@ -151,18 +131,15 @@ class ScheduleEntryCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline,
                         size: 20,
                         color: AppColors.foreground,
                       ),
-                      onPressed: () {
-                        context
-                            .read<ScheduleBloc>()
-                            .add(DeleteScheduleEntry(entryid: entry.id));
-                      },
+                      onPressed: () => context
+                          .read<ScheduleBloc>()
+                          .add(ScheduleEntryDeleteRequested(entry.id)),
                     ),
                   ],
                 ),

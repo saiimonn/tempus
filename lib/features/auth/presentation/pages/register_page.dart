@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Added
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
-import 'package:tempus/features/auth/logic/password_visibility_bloc.dart'; // Added
+import 'package:tempus/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:tempus/features/auth/presentation/bloc/auth_event.dart';
+import 'package:tempus/features/auth/presentation/bloc/auth_state.dart';
 
 // --- YOUR IMPORTS ---
 import 'package:tempus/core/theme/app_colors.dart';
@@ -19,8 +20,6 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   // --- STATE ---
   int _currentStep = 1;
-  bool _isLoading = false;
-  static const String _schoolDomain = "@usc.edu.ph";
 
   // --- CONTROLLERS ---
   final _fullNameController = TextEditingController();
@@ -64,52 +63,6 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
 
-  // --- LOGIC: Sign Up ---
-  Future<void> _signUp() async {
-    if (_idController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showError("Please fill in all fields");
-      return;
-    }
-
-    if (!_isLengthValid || !_isComplexityValid) {
-      _showError("Please meet the password requirements");
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final fullEmail = "${_idController.text.trim()}$_schoolDomain";
-
-      final AuthResponse res = await Supabase.instance.client.auth.signUp(
-        email: fullEmail,
-        password: _passwordController.text,
-        data: {
-          'full_name': _fullNameController.text.trim(),
-          'course': _courseController.text.trim(),
-          'year_level': _yearLevelController.text.trim(),
-        },
-      );
-
-      if (res.user != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: WText('Account Created! Please check your email.', className: 'text-white'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
-          ),
-        );
-        Navigator.pop(context);
-      }
-    } on AuthException catch (e) {
-      if (mounted) _showError(e.message);
-    } catch (e) {
-      if (mounted) _showError('An unexpected error occurred');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -131,51 +84,82 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Provide the Bloc to the entire page
     return BlocProvider(
-      create: (context) => PasswordVisibilityBloc(),
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        resizeToAvoidBottomInset: false,
-        body: AuthBackground(
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(top: 40, left: 40, right: 40, bottom: 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (_currentStep == 2) {
-                        setState(() => _currentStep = 1);
-                      } else {
-                        Navigator.pop(context);
-                      }
-                    },
-                    icon: const Icon(Icons.arrow_back, color: AppColors.text),
-                    padding: EdgeInsets.zero,
-                    alignment: Alignment.centerLeft,
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Column(
-                      children: [
-                        Image.asset('assets/images/logo.png', height: 40),
-                        const SizedBox(height: 20),
-                        WText(
-                          "Create your details",
-                          className: 'text-3xl font-black tracking-tighter text-center',
-                          style: const TextStyle(color: AppColors.text),
-                        ),
-                      ],
+      create: (context) => AuthBloc.create(),
+      child: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (previous, current) => previous.status != current.status,
+        listener: (context, state) {
+          if (state.status == AuthStatus.failure &&
+              state.errorMessage != null) {
+            _showError(state.errorMessage!);
+            context.read<AuthBloc>().add(const AuthStatusResetRequested());
+          }
+
+          if (state.status == AuthStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: WText(
+                  'Account Created! Please check your email.',
+                  className: 'text-white',
+                ),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+
+            context.read<AuthBloc>().add(const AuthStatusResetRequested());
+            Navigator.pop(context);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          resizeToAvoidBottomInset: false,
+          body: AuthBackground(
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  top: 40,
+                  left: 40,
+                  right: 40,
+                  bottom: 40,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        if (_currentStep == 2) {
+                          setState(() => _currentStep = 1);
+                        } else {
+                          Navigator.pop(context);
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back, color: AppColors.text),
+                      padding: EdgeInsets.zero,
+                      alignment: Alignment.centerLeft,
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: _currentStep == 1 ? _buildStep1() : _buildStep2(),
-                  ),
-                ],
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Column(
+                        children: [
+                          Image.asset('assets/images/logo.png', height: 40),
+                          const SizedBox(height: 20),
+                          WText(
+                            "Create your details",
+                            className:
+                                'text-3xl font-black tracking-tighter text-center',
+                            style: const TextStyle(color: AppColors.text),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _currentStep == 1 ? _buildStep1() : _buildStep2(),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -249,20 +233,25 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 16),
         _buildLabel("Password"),
         const SizedBox(height: 8),
-        // Use BlocBuilder to manage visibility state
-        BlocBuilder<PasswordVisibilityBloc, bool>(
-          builder: (context, isVisible) {
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
             return _buildInput(
               controller: _passwordController,
               hint: "Enter your password",
-              isPassword: !isVisible,
+              isPassword: !state.isPasswordVisible,
               suffixIcon: IconButton(
                 icon: Icon(
-                  isVisible ? Icons.visibility : Icons.visibility_off,
+                  state.isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
                   color: AppColors.foreground,
                   size: 20,
                 ),
-                onPressed: () => context.read<PasswordVisibilityBloc>().add(ToggleVisibility()),
+                onPressed: () {
+                  context.read<AuthBloc>().add(
+                    const AuthPasswordVisibilityToggled(),
+                  );
+                },
               ),
             );
           },
@@ -270,19 +259,56 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 20),
         _buildValidationItem(_isLengthValid, "Use 8 to 20 characters"),
         const SizedBox(height: 6),
-        _buildValidationItem(_isComplexityValid, "Use 2 of the following: letters, numbers, or symbols"),
+        _buildValidationItem(
+          _isComplexityValid,
+          "Use 2 of the following: letters, numbers, or symbols",
+        ),
         const SizedBox(height: 40),
-        _buildButton(
-          text: "Create Account",
-          onTap: _isLoading ? null : _signUp,
-          isLoading: _isLoading,
+        BlocBuilder<AuthBloc, AuthState>(
+          buildWhen: (previous, current) => previous.status != current.status,
+          builder: (context, state) {
+            final isLoading = state.status == AuthStatus.loading;
+
+            return _buildButton(
+              text: "Create Account",
+              onTap: isLoading
+                  ? null
+                  : () {
+                      if (_idController.text.isEmpty ||
+                          _passwordController.text.isEmpty) {
+                        _showError("Please fill in all fields");
+                        return;
+                      }
+
+                      if (!_isLengthValid || !_isComplexityValid) {
+                        _showError("Please meet the password requirements");
+                        return;
+                      }
+
+                      context.read<AuthBloc>().add(
+                        AuthSignUpRequested(
+                          fullName: _fullNameController.text.trim(),
+                          course: _courseController.text.trim(),
+                          yearLevel: _yearLevelController.text.trim(),
+                          studentId: _idController.text.trim(),
+                          password: _passwordController.text,
+                        ),
+                      );
+                    },
+              isLoading: isLoading,
+            );
+          },
         ),
       ],
     );
   }
 
   // --- HELPER WIDGETS ---
-  Widget _buildButton({required String text, VoidCallback? onTap, bool isLoading = false}) {
+  Widget _buildButton({
+    required String text,
+    VoidCallback? onTap,
+    bool isLoading = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -301,7 +327,14 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         child: Center(
           child: isLoading
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
               : WText(text, className: 'text-base font-bold text-white'),
         ),
       ),
@@ -322,7 +355,9 @@ class _RegisterPageState extends State<RegisterPage> {
           child: WText(
             text,
             className: 'text-xs',
-            style: TextStyle(color: isValid ? Colors.green : AppColors.foreground),
+            style: TextStyle(
+              color: isValid ? Colors.green : AppColors.foreground,
+            ),
           ),
         ),
       ],
@@ -330,7 +365,11 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildLabel(String text) {
-    return WText(text, className: 'text-sm font-bold', style: const TextStyle(color: AppColors.text));
+    return WText(
+      text,
+      className: 'text-sm font-bold',
+      style: const TextStyle(color: AppColors.text),
+    );
   }
 
   Widget _buildInput({
@@ -363,7 +402,10 @@ class _RegisterPageState extends State<RegisterPage> {
           hintStyle: const TextStyle(color: AppColors.foreground, fontSize: 14),
           border: InputBorder.none,
           suffixIcon: suffixIcon, // Added
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
