@@ -13,3 +13,16 @@ class AddTaskDueTimeChanged extends AddTaskEvent {
   final String time; // "HH:mm"
   AddTaskDueTimeChanged(this.time);
 }
+
+class AddTaskSubjectSelected extends AddTaskEvent {
+  final int id;
+  final String name;
+  final String code;
+  AddTaskSubjectSelected({
+    required this.id,
+    required this.name,
+    required this.code,
+  });
+}
+
+class AddTaskSubjectCleared extends AddTaskEvent {}

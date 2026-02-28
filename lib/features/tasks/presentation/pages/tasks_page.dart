@@ -13,18 +13,31 @@ class TasksPage extends StatefulWidget {
 }
 
 class _TasksPageState extends State<TasksPage> {
-  void _toggleSection(BuildContext context, String name) {
-    context.read<TaskBloc>().add(TaskSectionToggled(name));
+  final Set<String> _expandedSections = {
+    'Today',
+    'Upcoming',
+    'No Due',
+    'Completed',
+  };
+
+  void _toggleSection(String name) {
+    setState(() {
+      if (_expandedSections.contains(name)) {
+        _expandedSections.remove(name);
+      } else {
+        _expandedSections.add(name);
+      }
+    });
   }
 
   void _showAddTaskSheet(BuildContext context) {
-    final bloc = context.read<TaskBloc>();
+    final taskBloc = context.read<TaskBloc>();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
-        value: bloc,
+        value: taskBloc,
         child: const AddTaskSheet(),
       ),
     );
@@ -71,28 +84,28 @@ class _TasksPageState extends State<TasksPage> {
                           TaskSection(
                             title: 'Today',
                             tasks: state.todayTasks,
-                            isExpanded: state.isSectionExpanded('Today'),
-                            onToggle: () => _toggleSection(context, 'Today'),
+                            isExpanded: _expandedSections.contains('Today'),
+                            onToggle: () => _toggleSection('Today'),
                             showAddButton: true,
                             onAdd: () => _showAddTaskSheet(context),
                           ),
                           TaskSection(
                             title: 'Upcoming',
                             tasks: state.upcomingTasks,
-                            isExpanded: state.isSectionExpanded('Upcoming'),
-                            onToggle: () => _toggleSection(context, 'Upcoming'),
+                            isExpanded: _expandedSections.contains('Upcoming'),
+                            onToggle: () => _toggleSection('Upcoming'),
                           ),
                           TaskSection(
                             title: 'No Due',
                             tasks: state.noDueTasks,
-                            isExpanded: state.isSectionExpanded('No Due'),
-                            onToggle: () => _toggleSection(context, 'No Due'),
+                            isExpanded: _expandedSections.contains('No Due'),
+                            onToggle: () => _toggleSection('No Due'),
                           ),
                           TaskSection(
                             title: 'Completed',
                             tasks: state.completedTasks,
-                            isExpanded: state.isSectionExpanded('Completed'),
-                            onToggle: () => _toggleSection(context, 'Completed'),
+                            isExpanded: _expandedSections.contains('Completed'),
+                            onToggle: () => _toggleSection('Completed'),
                           ),
                         ]),
                       ),

@@ -1,12 +1,25 @@
 part of 'add_task_bloc.dart';
 
+class SelectedSubject {
+  final int id;
+  final String name;
+  final String code;
+  const SelectedSubject({
+    required this.id,
+    required this.name,
+    required this.code,
+  });
+}
+
 class AddTaskState {
   final DateTime? dueDate;
-  final String? dueTime; // "HH:mm"
+  final String? dueTime;
+  final SelectedSubject? selectedSubject;
 
   const AddTaskState({
     this.dueDate,
     this.dueTime,
+    this.selectedSubject,
   });
 
   String get dueDateLabel {
@@ -31,12 +44,16 @@ class AddTaskState {
   AddTaskState copyWith({
     DateTime? dueDate,
     String? dueTime,
+    SelectedSubject? selectedSubject,
     bool clearDueDate = false,
     bool clearDueTime = false,
+    bool clearSubject = false,
   }) {
     return AddTaskState(
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       dueTime: clearDueTime ? null : (dueTime ?? this.dueTime),
+      selectedSubject:
+          clearSubject ? null : (selectedSubject ?? this.selectedSubject),
     );
   }
 }

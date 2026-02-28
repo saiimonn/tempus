@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tempus/core/widgets/custom_text_field.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/subjects/data/data_source/scores_local_data_source.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_detail_local_data_source.dart';
@@ -17,7 +18,6 @@ import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/scores_page.dart';
 import 'package:tempus/features/subjects/presentation/pages/subject_detail_page.dart';
-import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 
 class SubjectsPage extends StatelessWidget {
   const SubjectsPage({super.key});
@@ -63,7 +63,7 @@ class SubjectsPage extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => BlocProvider.value(
         value: bloc,
-        child: const AddCategorySheet(),
+        child: const _AddSubjectBottomSheet(),
       ),
     );
   }
@@ -240,6 +240,160 @@ class _AddSubjectCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddSubjectBottomSheet extends StatefulWidget {
+  const _AddSubjectBottomSheet();
+
+  @override
+  State<_AddSubjectBottomSheet> createState() => _AddSubjectBottomSheetState();
+}
+
+class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _codeController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _profController = TextEditingController();
+  final TextEditingController _unitsController = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    _nameController.dispose();
+    _profController.dispose();
+    _unitsController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final newSubject = SubjectEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _nameController.text.trim(),
+      code: _codeController.text.trim(),
+      instructor: _profController.text.trim(),
+      units: int.parse(_unitsController.text.trim()),
+      grades: const {'prelim': '--', 'midterm': '--', 'final': '--'},
+    );
+
+    context.read<SubjectBloc>().add(SubjectAddRequested(newSubject));
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Add Subject',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Subject Name',
+                  hint: 'e.g. Data Structures and Algorithms',
+                  controller: _nameController,
+                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  label: 'Instructor',
+                  hint: 'e.g. Christine Pena',
+                  controller: _profController,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: CustomTextField(
+                        label: 'Subject Code',
+                        hint: 'e.g. CIS 2101',
+                        controller: _codeController,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Required' : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: CustomTextField(
+                        label: 'Units',
+                        hint: 'e.g. 3',
+                        controller: _unitsController,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Req.';
+                          }
+                          if (int.tryParse(v) == null) {
+                            return 'NaN';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.brandBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _submit,
+                    child: const Text(
+                      'Create Subject',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
         ),
       ),
