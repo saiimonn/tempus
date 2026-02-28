@@ -9,6 +9,12 @@ import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
+import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
+import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
+import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
+import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
+import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_local_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_subject.dart';
@@ -115,9 +121,21 @@ class _HomePageState extends State<HomePage> {
           _buildHomeContent(name),
 
           // PLACEHOLDERS FOR PAGES
-          const SchedulePage(),
+          BlocProvider<ScheduleBloc>(
+            create: (_) {
+              final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
+              return ScheduleBloc(
+                loadSchedule: LoadSchedule(repo),
+                addScheduleEntry: AddScheduleEntry(repo),
+                deleteScheduleEntry: DeleteScheduleEntry(repo),
+              )..add(ScheduleLoadRequested());
+            },
+            child: const SchedulePage(),
+          ),
+
           const Center(child: Text("Tasks Page")),
           const Center(child: Text("Finances Page")),
+          
           BlocProvider<SubjectBloc>(
             create: (_) {
               final repo = SubjectRepositoryImpl(SubjectLocalDataSource());

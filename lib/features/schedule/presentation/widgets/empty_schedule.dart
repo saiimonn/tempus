@@ -1,12 +1,12 @@
-// used in schedul_page.dart -> ScheduleContent()
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 
 class EmptySchedule extends StatelessWidget {
-  final List<Map<String, dynamic>> subject;
+  final List<ScheduleSubjectEntity> subjects;
 
-  const EmptySchedule({super.key, required this.subject});
+  const EmptySchedule({super.key, required this.subjects});
 
   @override
   Widget build(BuildContext context) {
@@ -19,28 +19,25 @@ class EmptySchedule extends StatelessWidget {
             size: 60,
             color: AppColors.foreground.withValues(alpha: 0.5),
           ),
-
           const Gap(16),
-
           const Text(
-            "No classes scheduled yet",
+            'No classes scheduled yet',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.foreground,
             ),
           ),
-
           const Text(
             "Tap 'Add Class' to get started",
             style: TextStyle(
-              fontSize: 12, 
-              color: AppColors.foreground, 
-              fontWeight: FontWeight.w500
+              fontSize: 12,
+              color: AppColors.foreground,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ]
-      )
+        ],
+      ),
     );
   }
 }

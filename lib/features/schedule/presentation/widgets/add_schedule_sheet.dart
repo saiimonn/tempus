@@ -1,12 +1,12 @@
-// used in add_button.dart -> _showSheet()
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/schedule/logic/add_schedule_sheet_bloc.dart';
-import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
-const dayAbbr = {
+const _dayAbbr = {
   'Monday': 'Mon',
   'Tuesday': 'Tue',
   'Wednesday': 'Wed',
@@ -17,7 +17,7 @@ const dayAbbr = {
 };
 
 class AddScheduleSheet extends StatelessWidget {
-  final List<Map<String, dynamic>> subjects;
+  final List<ScheduleSubjectEntity> subjects;
 
   const AddScheduleSheet({super.key, required this.subjects});
 
@@ -25,15 +25,15 @@ class AddScheduleSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => AddScheduleBloc(),
-      child: AddScheduleSheetBody(subjects: subjects),
+      child: _AddScheduleSheetBody(subjects: subjects),
     );
   }
 }
 
-class AddScheduleSheetBody extends StatelessWidget {
-  final List<Map<String, dynamic>> subjects;
+class _AddScheduleSheetBody extends StatelessWidget {
+  final List<ScheduleSubjectEntity> subjects;
 
-  const AddScheduleSheetBody({super.key, required this.subjects});
+  const _AddScheduleSheetBody({required this.subjects});
 
   @override
   Widget build(BuildContext context) {
@@ -66,17 +66,12 @@ class AddScheduleSheetBody extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(
-                    Icons.close,
-                    size: 22,
-                    color: AppColors.text,
-                  ),
+                  child: const Icon(Icons.close, size: 22, color: AppColors.text),
                 ),
-
                 const Expanded(
                   child: Center(
                     child: Text(
-                      "Add Schedule",
+                      'Add Schedule',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -91,27 +86,25 @@ class AddScheduleSheetBody extends StatelessWidget {
 
             const Gap(24),
 
-            _buildLabel("Subjects"),
-
+            _buildLabel('Subjects'),
             const Gap(8),
-
             subjects.isEmpty
-                ? _NoSubjectsHint()
+                ? const _NoSubjectsHint()
                 : _SubjectDropdown(subjects: subjects),
 
             const Gap(16),
 
-            _buildLabel("Days"),
-            _DayChips(),
+            _buildLabel('Days'),
+            const _DayChips(),
 
             const Gap(16),
 
-            _buildLabel("Time"),
-            _TimeRow(),
-            
+            _buildLabel('Time'),
+            const _TimeRow(),
+
             const Gap(28),
-            
-            _ConfirmButton(),
+
+            const _ConfirmButton(),
           ],
         ),
       ),
@@ -119,24 +112,29 @@ class AddScheduleSheetBody extends StatelessWidget {
   }
 
   Widget _buildLabel(String text) => Text(
-    text,
-    style: const TextStyle(
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-      color: AppColors.text,
-    ),
-  );
+        text,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColors.text,
+        ),
+      );
 }
 
+// ---------------------------------------------------------------------------
+// Subject dropdown
+// ---------------------------------------------------------------------------
+
 class _SubjectDropdown extends StatelessWidget {
-  final List<Map<String, dynamic>> subjects;
+  final List<ScheduleSubjectEntity> subjects;
 
   const _SubjectDropdown({required this.subjects});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
-      buildWhen: (prev, curr) => prev.selectedSubject != curr.selectedSubject,
+      buildWhen: (prev, curr) =>
+          prev.selectedSubject != curr.selectedSubject,
       builder: (context, state) {
         final selected = state.selectedSubject;
 
@@ -152,26 +150,24 @@ class _SubjectDropdown extends StatelessWidget {
               width: selected != null ? 2 : 1,
             ),
           ),
-
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<Map<String, dynamic>>(
+            child: DropdownButton<ScheduleSubjectEntity>(
               value: selected,
               isExpanded: true,
               hint: const Text(
-                "Select a Subject",
+                'Select a Subject',
                 style: TextStyle(color: AppColors.foreground, fontSize: 14),
               ),
               icon: const Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.foreground,
               ),
-
               style: const TextStyle(color: AppColors.text, fontSize: 15),
               dropdownColor: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              items: subjects.map((sub) {
-                return DropdownMenuItem<Map<String, dynamic>>(
-                  value: sub,
+              items: subjects.map((subject) {
+                return DropdownMenuItem<ScheduleSubjectEntity>(
+                  value: subject,
                   child: Row(
                     children: [
                       Container(
@@ -183,23 +179,21 @@ class _SubjectDropdown extends StatelessWidget {
                         ),
                       ),
                       const Gap(10),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "${sub['code']}",
+                              subject.code,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.text,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-
                             Text(
-                              "${sub['name']}",
+                              subject.name,
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: AppColors.text,
@@ -214,9 +208,11 @@ class _SubjectDropdown extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  context.read<AddScheduleBloc>().add(SubjectSelected(val));
+              onChanged: (subject) {
+                if (subject != null) {
+                  context
+                      .read<AddScheduleBloc>()
+                      .add(AddScheduleSubjectSelected(subject));
                 }
               },
             ),
@@ -227,19 +223,22 @@ class _SubjectDropdown extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// No subjects hint
+// ---------------------------------------------------------------------------
+
 class _NoSubjectsHint extends StatelessWidget {
   const _NoSubjectsHint();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: const Column(
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Column(
         children: [
           Icon(Icons.info_outline, size: 24, color: AppColors.foreground),
-
           Text(
-            "No subjects yet. Add subjects first in the Subjects tab.",
+            'No subjects yet. Add subjects first in the Subjects tab.',
             style: TextStyle(fontSize: 12, color: AppColors.foreground),
           ),
         ],
@@ -247,6 +246,10 @@ class _NoSubjectsHint extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Day chips
+// ---------------------------------------------------------------------------
 
 class _DayChips extends StatelessWidget {
   const _DayChips();
@@ -263,13 +266,13 @@ class _DayChips extends StatelessWidget {
             final isSelected = state.selectedDays.contains(day);
 
             return GestureDetector(
-              onTap: () => context.read<AddScheduleBloc>().add(DayToggled(day)),
+              onTap: () => context
+                  .read<AddScheduleBloc>()
+                  .add(AddScheduleDayToggled(day)),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.brandBlue
@@ -279,16 +282,15 @@ class _DayChips extends StatelessWidget {
                     color: isSelected
                         ? AppColors.brandBlue
                         : AppColors.inputFill,
-                    width: 1,
                   ),
                 ),
-
                 child: Text(
-                  dayAbbr[day]!,
+                  _dayAbbr[day]!,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.foreground,
+                    color:
+                        isSelected ? Colors.white : AppColors.foreground,
                   ),
                 ),
               ),
@@ -300,17 +302,21 @@ class _DayChips extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Time row
+// ---------------------------------------------------------------------------
+
 class _TimeRow extends StatelessWidget {
   const _TimeRow();
 
-  String fmtDisplay(TimeOfDay t) {
+  String _fmtDisplay(TimeOfDay t) {
     final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
     final min = t.minute.toString().padLeft(2, '0');
     final period = t.period == DayPeriod.am ? 'AM' : 'PM';
-    return "$hour:$min $period";
+    return '$hour:$min $period';
   }
 
-  Future<void> pickTime(
+  Future<void> _pickTime(
     BuildContext context, {
     required bool isStart,
     required TimeOfDay initial,
@@ -332,8 +338,10 @@ class _TimeRow extends StatelessWidget {
     if (picked == null || !context.mounted) return;
 
     context.read<AddScheduleBloc>().add(
-      isStart ? StartTimeChanged(picked) : EndTimeChanged(picked),
-    );
+          isStart
+              ? AddScheduleStartTimeChanged(picked)
+              : AddScheduleEndTimeChanged(picked),
+        );
   }
 
   @override
@@ -342,51 +350,34 @@ class _TimeRow extends StatelessWidget {
       buildWhen: (prev, curr) =>
           prev.startTime != curr.startTime || prev.endTime != curr.endTime,
       builder: (context, state) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _TimeButton(
-                    label: "Start",
-                    displayValue: fmtDisplay(state.startTime),
-                    isError: false,
-                    onTap: () => pickTime(
-                      context,
-                      isStart: true,
-                      initial: state.startTime,
-                    ),
-                  ),
+            Expanded(
+              child: _TimeButton(
+                label: 'Start',
+                displayValue: _fmtDisplay(state.startTime),
+                onTap: () => _pickTime(
+                  context,
+                  isStart: true,
+                  initial: state.startTime,
                 ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: AppColors.text,
-                  ),
-                ),
-
-                Expanded(
-                  child: _TimeButton(
-                    label: "End",
-                    displayValue: fmtDisplay(state.endTime),
-                    isError: false,
-                    onTap: () => pickTime(
-                      context,
-                      isStart: false,
-                      initial: state.endTime,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-
-            if (state.timeInvalid) ...[
-              
-            ]
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(Icons.arrow_forward, size: 16, color: AppColors.text),
+            ),
+            Expanded(
+              child: _TimeButton(
+                label: 'End',
+                displayValue: _fmtDisplay(state.endTime),
+                onTap: () => _pickTime(
+                  context,
+                  isStart: false,
+                  initial: state.endTime,
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -397,13 +388,11 @@ class _TimeRow extends StatelessWidget {
 class _TimeButton extends StatelessWidget {
   final String label;
   final String displayValue;
-  final bool isError;
   final VoidCallback onTap;
 
   const _TimeButton({
     required this.label,
     required this.displayValue,
-    required this.isError,
     required this.onTap,
   });
 
@@ -416,10 +405,7 @@ class _TimeButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isError ? AppColors.destructive : AppColors.inputFill,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.inputFill),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,7 +418,7 @@ class _TimeButton extends StatelessWidget {
                 color: AppColors.foreground,
               ),
             ),
-            Gap(2),
+            const Gap(2),
             Text(
               displayValue,
               style: const TextStyle(
@@ -448,6 +434,10 @@ class _TimeButton extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Confirm button
+// ---------------------------------------------------------------------------
+
 class _ConfirmButton extends StatelessWidget {
   const _ConfirmButton();
 
@@ -456,15 +446,14 @@ class _ConfirmButton extends StatelessWidget {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
       buildWhen: (prev, curr) => prev.isValid != curr.isValid,
       builder: (context, state) {
-        return Container(
+        return SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: state.isValid ? () => _confirm(context, state) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.brandBlue,
-              disabledBackgroundColor: AppColors.brandBlue.withValues(
-                alpha: 0.5,
-              ),
+              disabledBackgroundColor:
+                  AppColors.brandBlue.withValues(alpha: 0.5),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -472,7 +461,7 @@ class _ConfirmButton extends StatelessWidget {
               ),
             ),
             child: const Text(
-              "Confirm",
+              'Confirm',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
@@ -486,15 +475,17 @@ class _ConfirmButton extends StatelessWidget {
   }
 
   void _confirm(BuildContext context, AddScheduleState state) {
+    final subject = state.selectedSubject!;
     context.read<ScheduleBloc>().add(
-      AddScheduleEntry(
-        subId: state.selectedSubject!['id'] as int,
-        subjectName: state.selectedSubject!['name'] as String,
-        subjectCode: state.selectedSubject!['code'] as String,
-        days: state.selectedDays.toList(),
-        startTime: state.startTimeStr,
-        endTime: state.endTimeStr,
-      ),
-    );
+          ScheduleEntryAddRequested(
+            subId: subject.id,
+            subjectName: subject.name,
+            subjectCode: subject.code,
+            days: state.selectedDays.toList(),
+            startTime: state.startTimeStr,
+            endTime: state.endTimeStr,
+          ),
+        );
+    Navigator.of(context).pop();
   }
 }

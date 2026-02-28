@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_button.dart';
 import 'package:tempus/features/schedule/presentation/widgets/empty_schedule.dart';
 import 'package:tempus/features/schedule/presentation/widgets/schedule_entry_card.dart';
@@ -13,43 +13,25 @@ class SchedulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ScheduleBloc()..add(LoadSchedule()),
-      child: const ScheduleView(),
-    );
-  }
-}
-
-class ScheduleView extends StatelessWidget {
-  const ScheduleView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: BlocBuilder<ScheduleBloc, ScheduleState>(
-        builder: (context, state) {
-          if (state is ScheduleLoading) {
-            return const Center(
+    return BlocBuilder<ScheduleBloc, ScheduleState>(
+      builder: (context, state) {
+        return switch (state) {
+          ScheduleLoading() => const Center(
               child: CircularProgressIndicator(color: AppColors.brandBlue),
-            );
-          }
-
-          if (state is ScheduleLoaded) {
-            return ScheduleContent(state: state);
-          }
-
-          return const Center(child: Text("Failed to load schedule."));
-        },
-      ),
+            ),
+          ScheduleLoaded() => _ScheduleContent(state: state),
+          ScheduleError(:final message) => Center(child: Text(message)),
+          _ => const SizedBox.shrink(),
+        };
+      },
     );
   }
 }
 
-class ScheduleContent extends StatelessWidget {
+class _ScheduleContent extends StatelessWidget {
   final ScheduleLoaded state;
 
-  const ScheduleContent({super.key, required this.state});
+  const _ScheduleContent({required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +44,7 @@ class ScheduleContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  "Class Schedule",
+                  'Class Schedule',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -78,13 +60,13 @@ class ScheduleContent extends StatelessWidget {
         if (state.entries.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
-            child: EmptySchedule(subject: state.subjects),
+            child: EmptySchedule(subjects: state.subjects),
           )
         else ...[
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: DayViewTimetable(state: state),
+              child: TimetableGrid(state: state),
             ),
           ),
 
@@ -94,7 +76,7 @@ class ScheduleContent extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                "Classes",
+                'Classes',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -108,13 +90,10 @@ class ScheduleContent extends StatelessWidget {
 
           SliverList(
             delegate: SliverChildBuilderDelegate(
-              (context, i) {
-                final entry = state.entries[i];
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: ScheduleEntryCard(entry: entry),
-                );
-              },
+              (context, i) => Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: ScheduleEntryCard(entry: state.entries[i]),
+              ),
               childCount: state.entries.length,
             ),
           ),

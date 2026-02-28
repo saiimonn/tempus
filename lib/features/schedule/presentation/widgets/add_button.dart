@@ -1,13 +1,13 @@
-// used in schedule_page.dart -> ScheduleContent()
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/schedule/logic/schedule_bloc.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_schedule_sheet.dart';
 
 class AddButton extends StatelessWidget {
-  final List<Map<String, dynamic>> subjects;
+  final List<ScheduleSubjectEntity> subjects;
 
   const AddButton({super.key, required this.subjects});
 
@@ -21,13 +21,13 @@ class AddButton extends StatelessWidget {
           color: AppColors.brandBlue,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.add, size: 16, color: Colors.white, weight: 3),
+          children: [
+            Icon(Icons.add, size: 16, color: Colors.white),
             Gap(4),
             Text(
-              "Add Class",
+              'Add Class',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
