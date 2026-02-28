@@ -7,7 +7,7 @@ A new Flutter project.
 ```
 lib/
 └── features/
-    └── user_profile/
+    └── feature_name/
         ├── data/
         │   ├── data_sources/
         │   │   ├── sample_data_source.dart
