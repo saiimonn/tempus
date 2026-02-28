@@ -1,28 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/subjects/logic/scores_bloc.dart';
+import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
+import 'package:tempus/features/subjects/presentation/bloc/scores/scores_bloc.dart';
 import 'package:tempus/features/subjects/presentation/widgets/add_score_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/category_section.dart';
 
 class ScoresPage extends StatelessWidget {
-  final Map<String, dynamic> subject;
+  final SubjectEntity subject;
 
   const ScoresPage({super.key, required this.subject});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ScoresBloc()..add(LoadScores(int.parse(subject['id'].toString()))),
-      child: _ScoresView(subject: subject),
-    );
-  }
-}
-
-class _ScoresView extends StatelessWidget {
-  final Map<String, dynamic> subject;
-
-  const _ScoresView({required this.subject});
 
   @override
   Widget build(BuildContext context) {
@@ -39,16 +26,15 @@ class _ScoresView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${subject['code']}",
+              subject.code,
               style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.brandBlue,
                 fontWeight: FontWeight.w500,
               ),
             ),
-
             Text(
-              "${subject['name']}",
+              subject.name,
               style: const TextStyle(
                 fontSize: 16,
                 color: AppColors.text,
@@ -58,84 +44,71 @@ class _ScoresView extends StatelessWidget {
           ],
         ),
       ),
-
-      body: BlocBuilder<ScoresBloc, ScoresState> (
+      body: BlocBuilder<ScoresBloc, ScoresState>(
         builder: (context, state) {
-          if (state is ScoresLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.brandBlue),
-            );
-          }
-
-          if (state is ScoresLoaded) {
-            if(state.categories.isEmpty) {
-              return _buildNoCategories();
-            }
-            return _buildContent(context, state);
-          }
-
-          return const Center(child: Text("Failed to load scores."));
+          return switch (state) {
+            ScoresLoading() => const Center(
+                child: CircularProgressIndicator(color: AppColors.brandBlue),
+              ),
+            ScoresLoaded() => _buildContent(context, state),
+            ScoresError(:final message) => Center(child: Text(message)),
+            _ => const SizedBox.shrink(),
+          };
         },
       ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ScoresLoaded state) {
+    if (state.categories.isEmpty) return _buildNoCategories();
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: state.categories.map((category) {
+        final isExpanded = state.expandedCategories.contains(category.id);
+        final catScores = state.scores[category.id] ?? [];
+
+        return CategorySection(
+          category: category,
+          scores: catScores,
+          isExpanded: isExpanded,
+          onToggle: () => context
+              .read<ScoresBloc>()
+              .add(ScoresCategoryToggled(category.id)),
+          onAddScore: () => _showAddScoreSheet(context, category.id),
+          onDeleteScore: (scoreId) => context.read<ScoresBloc>().add(
+                ScoresDeleteRequested(
+                  categoryId: category.id,
+                  scoreId: scoreId,
+                ),
+              ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildNoCategories() {
     return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.category_outlined,
-            size: 48,
-            color: AppColors.foreground,
-          ),
-
+          Icon(Icons.category_outlined, size: 48, color: AppColors.foreground),
           const SizedBox(height: 8),
-
           Text(
-            "No Grade Categories",
+            'No Grade Categories',
             style: TextStyle(
               fontSize: 20,
               color: AppColors.foreground,
               fontWeight: FontWeight.w500,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
-            "Set up grade categories in Manage Grading",
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.foreground,
-            ),
+            'Set up grade categories in Manage Grading',
+            style: TextStyle(fontSize: 16, color: AppColors.foreground),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, ScoresLoaded state) {
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: state.categories.map((category) {
-        final int catId = category['id'] as int;
-        final bool isExpanded = state.expandedCategories.contains(catId);
-        final List<Map<String, dynamic>> catScores = state.scores[catId] ?? [];
-
-        return CategorySection(
-          category: category,
-          scores: catScores,
-          isExpanded: isExpanded,
-          onToggle: () => context.read<ScoresBloc>().add(ToggleCategory(catId)),
-          onAddScore: () => _showAddScoreSheet(context, catId),
-          onDeleteScore: (scoreId) => context.read<ScoresBloc>().add(
-            DeleteScore(categoryId: catId, scoreId: scoreId)
-          ),
-        );
-      }).toList(),
     );
   }
 

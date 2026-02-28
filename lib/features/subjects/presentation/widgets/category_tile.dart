@@ -1,12 +1,16 @@
-// used in subject_detail_page -> _buildContent()
 import 'package:flutter/material.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
 
 class CategoryTile extends StatelessWidget {
-  final Map<String, dynamic> category;
+  final GradeCategoryEntity category;
   final VoidCallback onDelete;
 
-  const CategoryTile({ super.key, required this.category, required this.onDelete});
+  const CategoryTile({
+    super.key,
+    required this.category,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +22,6 @@ class CategoryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
-      
       child: Row(
         children: [
           Container(
@@ -29,12 +32,10 @@ class CategoryTile extends StatelessWidget {
               color: AppColors.brandBlue,
             ),
           ),
-          
           const SizedBox(width: 12),
-          
           Expanded(
             child: Text(
-              "${category['name']}",
+              category.name,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -42,20 +43,19 @@ class CategoryTile extends StatelessWidget {
               ),
             ),
           ),
-          
           Text(
-            "${(category['weight'] as double).toStringAsFixed(0)}%",
+            '${category.weight.toStringAsFixed(0)}%',
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: AppColors.text,
             ),
           ),
-          
           const SizedBox(width: 12),
           GestureDetector(
             onTap: onDelete,
-            child: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade500),
+            child: Icon(Icons.delete_outline,
+                size: 20, color: Colors.grey.shade500),
           ),
         ],
       ),

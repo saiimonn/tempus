@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/subjects/logic/subject_detail_bloc.dart';
+import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
 import 'package:tempus/core/widgets/custom_text_field.dart';
 
 class AddCategorySheet extends StatefulWidget {
@@ -28,9 +28,9 @@ class AddCategorySheetState extends State<AddCategorySheet> {
     if (!_formKey.currentState!.validate()) return;
 
     context.read<SubjectDetailBloc>().add(
-      AddGradeCategory(
-        name: _nameController.text.trim(),
-        weight: double.parse(_weightController.text.trim()),
+      SubjectDetailCategoryAddRequested(
+        _nameController.text.trim(),
+        double.parse(_weightController.text.trim()),
       ),
     );
 

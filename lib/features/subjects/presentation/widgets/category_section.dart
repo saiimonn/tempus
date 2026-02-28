@@ -1,11 +1,12 @@
-//used in scores_page -> _buildContent()
 import 'package:flutter/material.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
+import 'package:tempus/features/subjects/domain/entities/scores_entity.dart';
 import 'package:tempus/features/subjects/presentation/widgets/score_tile.dart';
 
 class CategorySection extends StatelessWidget {
-  final Map<String, dynamic> category;
-  final List<Map<String, dynamic>> scores;
+  final GradeCategoryEntity category;
+  final List<ScoresEntity> scores;
   final bool isExpanded;
   final VoidCallback onToggle;
   final VoidCallback onAddScore;
@@ -22,7 +23,7 @@ class CategorySection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext build) {
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -35,15 +36,16 @@ class CategorySection extends StatelessWidget {
           InkWell(
             onTap: onToggle,
             borderRadius: isExpanded
-              ? const BorderRadius.vertical(top: Radius.circular(12))
-              : BorderRadius.circular(12),
+                ? const BorderRadius.vertical(top: Radius.circular(12))
+                : BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      "${category['name']}",
+                      category.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -56,16 +58,15 @@ class CategorySection extends StatelessWidget {
                     behavior: HitTestBehavior.opaque,
                     child: const Padding(
                       padding: EdgeInsets.all(4),
-                      child: Icon(Icons.add, size: 20, color: AppColors.brandBlue),
+                      child: Icon(Icons.add,
+                          size: 20, color: AppColors.brandBlue),
                     ),
                   ),
-
                   const SizedBox(width: 4),
-
                   Icon(
                     isExpanded
-                      ? Icons.keyboard_arrow_down_rounded
-                      : Icons.keyboard_arrow_right_rounded,
+                        ? Icons.keyboard_arrow_down_rounded
+                        : Icons.keyboard_arrow_right_rounded,
                     size: 22,
                     color: AppColors.foreground,
                   ),
@@ -73,22 +74,20 @@ class CategorySection extends StatelessWidget {
               ),
             ),
           ),
-
-          if (isExpanded)...[
-            Divider (
+          if (isExpanded) ...[
+            Divider(
               height: 1,
               color: Colors.grey.withValues(alpha: 60),
               indent: 16,
               endIndent: 16,
             ),
-
             if (scores.isEmpty)
               _buildNoScores()
             else
               ...scores.map(
                 (score) => ScoreTile(
                   score: score,
-                  onDelete: () => onDeleteScore(score['id'] as int),
+                  onDelete: () => onDeleteScore(score.id),
                 ),
               ),
           ],
@@ -107,12 +106,10 @@ class CategorySection extends StatelessWidget {
             size: 36,
             color: AppColors.foreground.withValues(alpha: 0.4),
           ),
-          
           const SizedBox(height: 8),
-
           const Text(
-            "No Scores Found",
-            style: TextStyle(color: AppColors.foreground, fontSize: 13)
+            'No Scores Found',
+            style: TextStyle(color: AppColors.foreground, fontSize: 13),
           ),
         ],
       ),
