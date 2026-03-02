@@ -1,0 +1,16 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/finance/data/data_sources/finance_local_data_source.dart';
+import 'package:tempus/features/finance/data/repositories/finance_repository_impl.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_finance.dart';
+import 'package:tempus/features/finance/domain/use_cases/update_budget.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_subscriptions.dart';
+import 'package:tempus/features/finance/domain/use_cases/add_subscription.dart';
+import 'package:tempus/features/finance/domain/use_cases/delete_subscription.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_transactions.dart';
+import 'package:tempus/features/finance/domain/use_cases/add_transaction.dart';
+import 'package:tempus/features/finance/domain/use_cases/delete_transaction.dart';
+import 'package:tempus/features/finance/presentation/blocs/finance/finance_bloc.dart';
+import 'package:tempus/features/finance/presentation/blocs/subscription/subscription_bloc.dart';
+import 'package:tempus/features/finance/presentation/blocs/transaction/transaction_bloc.dart';
