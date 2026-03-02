@@ -9,6 +9,7 @@ import 'package:tempus/features/auth/presentation/bloc/auth_state.dart';
 // --- YOUR IMPORTS ---
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/auth_background.dart';
+import 'package:tempus/core/widgets/snackbar_utils.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -64,12 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: WText(message, className: 'text-white'),
-        backgroundColor: AppColors.destructive,
-      ),
-    );
+    SnackbarUtils.showError(context, message);
   }
 
   void _goToStep2() {
@@ -96,15 +92,9 @@ class _RegisterPageState extends State<RegisterPage> {
           }
 
           if (state.status == AuthStatus.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: WText(
-                  'Account Created! Please check your email.',
-                  className: 'text-white',
-                ),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 4),
-              ),
+            SnackbarUtils.showSuccess(
+              context,
+              'Account Created! Please check your email.',
             );
 
             context.read<AuthBloc>().add(const AuthStatusResetRequested());

@@ -41,6 +41,11 @@ class AuthRemoteDataSource {
     );
 
     final user = response.user;
+
+    if (user != null && user.identities != null && user.identities!.isEmpty) {
+      throw const AuthException('This ID Number is already registered.');
+    }
+
     if (user == null) {
       throw const AuthException('Unable to create account. Please try again.');
     }
