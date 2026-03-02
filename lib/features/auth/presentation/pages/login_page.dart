@@ -9,6 +9,7 @@ import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'register_page.dart';
 import 'package:tempus/core/widgets/auth_background.dart';
+import 'package:tempus/core/widgets/snackbar_utils.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,12 +23,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: WText(message, className: 'text-white'),
-        backgroundColor: AppColors.destructive,
-      ),
-    );
+    SnackbarUtils.showError(context, message);
   }
 
   @override
@@ -44,12 +40,7 @@ class _LoginPageState extends State<LoginPage> {
           }
 
           if (state.status == AuthStatus.success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: WText('Login Successful!', className: 'text-white'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            SnackbarUtils.showSuccess(context, 'Login Successful!');
 
             context.read<AuthBloc>().add(const AuthStatusResetRequested());
 
