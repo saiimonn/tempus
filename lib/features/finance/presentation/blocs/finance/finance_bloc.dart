@@ -12,9 +12,9 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
 
   FinanceBloc({
     required GetFinance getFinance,
-    required UpdateBudget udpateBudget,
+    required UpdateBudget updateBudget,
   }) : _getFinance = getFinance,
-       _updateBudget = udpateBudget,
+       _updateBudget = updateBudget,
        super(const FinanceState()) {
     on<FinanceLoadRequested>(_onLoad);
     on<FinanceBudgetUpdateRequested>(_onUpdateBudget);
