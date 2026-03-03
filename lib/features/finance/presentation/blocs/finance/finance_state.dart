@@ -6,12 +6,14 @@ class FinanceState {
   final FinanceStatus status;
   final FinanceEntity? finance;
   final int selectedTabIndex;
+  final String selectedBudgetCycle;
   final String? errorMessage;
 
   const FinanceState({
     this.status = FinanceStatus.initial,
     this.finance,
     this.selectedTabIndex = 0,
+    this.selectedBudgetCycle = 'Weekly',
     this.errorMessage,
   });
 
@@ -19,6 +21,7 @@ class FinanceState {
     FinanceStatus? status,
     FinanceEntity? finance,
     int? selectedTabIndex,
+    String? selectedBudgetCycle,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -26,6 +29,7 @@ class FinanceState {
       status: status ?? this.status,
       finance: finance ?? this.finance,
       selectedTabIndex: selectedTabIndex ?? this.selectedTabIndex,
+      selectedBudgetCycle: selectedBudgetCycle ?? this.selectedBudgetCycle,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }

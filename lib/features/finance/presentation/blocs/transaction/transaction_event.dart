@@ -20,3 +20,9 @@ class TransactionDeleteRequested extends TransactionEvent {
   final int id;
   TransactionDeleteRequested(this.id);
 }
+
+class TransactionTypeChanged extends TransactionEvent {
+  final bool isIncome;
+
+  TransactionTypeChanged(this.isIncome);
+}

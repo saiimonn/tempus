@@ -19,6 +19,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     on<FinanceLoadRequested>(_onLoad);
     on<FinanceBudgetUpdateRequested>(_onUpdateBudget);
     on<FinanceTabChanged>(_onTabChanged);
+     on<FinanceBudgetCycleChanged>(_onBudgetCycleChanged);
   }
 
   Future<void> _onLoad(
@@ -54,5 +55,12 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
 
   void _onTabChanged(FinanceTabChanged event, Emitter<FinanceState> emit) {
     emit(state.copyWith(selectedTabIndex: event.tabIndex));
+  }
+
+  void _onBudgetCycleChanged(
+    FinanceBudgetCycleChanged event,
+    Emitter<FinanceState> emit,
+  ) {
+    emit(state.copyWith(selectedBudgetCycle: event.cycle));
   }
 }

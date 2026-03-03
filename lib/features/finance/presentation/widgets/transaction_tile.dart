@@ -60,8 +60,8 @@ class TransactionTile extends StatelessWidget {
 
               child: Icon(
                 isIncome
-                    ? Icons.arrow_downward_rounded
-                    : Icons.arrow_upward_rounded,
+                    ? Icons.arrow_upward_rounded
+                    : Icons.arrow_downward_rounded,
                 size: 18,
                 color: color,
               ),

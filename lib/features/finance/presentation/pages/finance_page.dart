@@ -19,6 +19,9 @@ import 'package:tempus/features/finance/domain/use_cases/delete_transaction.dart
 import 'package:tempus/features/finance/presentation/blocs/finance/finance_bloc.dart';
 import 'package:tempus/features/finance/presentation/blocs/subscription/subscription_bloc.dart';
 import 'package:tempus/features/finance/presentation/blocs/transaction/transaction_bloc.dart';
+import 'package:tempus/features/finance/presentation/widgets/budget_tab.dart';
+import 'package:tempus/features/finance/presentation/widgets/subscriptions_tab.dart';
+import 'package:tempus/features/finance/presentation/widgets/transactions_tab.dart';
 
 class FinancePage extends StatelessWidget {
   const FinancePage({super.key});
@@ -70,16 +73,7 @@ class FinancePage extends StatelessWidget {
               child: CircularProgressIndicator(color: AppColors.brandBlue),
             ),
           );
-          
-          if (state.status == FinanceStatus.error)
-            return Scaffold(
-              backgroundColor: AppColors.background,
-              body: Center(
-                child: Text(state.errorMessage ?? 'An error occurred'),
-              ),
-            );
         }
-        
         return _FinanceContent(state: state);
       },
     );
@@ -100,7 +94,6 @@ class _FinanceContent extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,12 +155,12 @@ class _FinanceContent extends StatelessWidget {
             child: IndexedStack(
               index: state.selectedTabIndex,
               children: const [
-                // BudgetTab(),
-                // TransactionsTab(),
-                // SubscriptionsTab(),
-              ]
-            )
-          )
+                BudgetTab(),
+                TransactionsTab(),
+                SubscriptionsTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );

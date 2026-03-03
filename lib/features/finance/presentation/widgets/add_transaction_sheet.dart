@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
@@ -16,7 +15,6 @@ class AddTransactionSheet extends StatefulWidget {
 class _AddTransactionSheetState extends State<AddTransactionSheet> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  bool _isIncome = false;
 
   @override
   void dispose() {
@@ -28,6 +26,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   void _confirm() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
+    final isIncome = context.read<TransactionBloc>().state.selectedIsIncome;
 
     if (title.isEmpty || amount == null || amount <= 0) return;
 
@@ -35,7 +34,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
       TransactionAddRequested(
         title: title,
         amount: amount,
-        isIncome: _isIncome,
+        isIncome: isIncome,
       ),
     );
     Navigator.of(context).pop();
@@ -45,94 +44,104 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
+    return BlocBuilder<TransactionBloc, TransactionState>(
+      builder: (context, state) {
+        final isIncome = state.selectedIsIncome;
 
-          Row(
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Icon(Icons.close, size: 24, color: AppColors.text),
-              ),
-              const Expanded(
-                child: Center(
-                  child: Text(
-                    'Add New Transaction',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.text,
-                    ),
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
 
-              GestureDetector(
-                onTap: _confirm,
-                child: const Icon(
-                  Icons.check,
-                  size: 24,
-                  color: AppColors.brandBlue,
-                ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(Icons.close, size: 24, color: AppColors.text),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Add New Transaction',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  GestureDetector(
+                    onTap: _confirm,
+                    child: const Icon(
+                      Icons.check,
+                      size: 24,
+                      color: AppColors.brandBlue,
+                    ),
+                  ),
+                ],
+              ),
+
+              CustomTextField(
+                controller: _titleController,
+                hint: 'e.g. Jollibee Funds',
+                label: 'Transaction Name',
+              ),
+
+              const Gap(16),
+
+              Row(
+                children: [
+                  _TypeButton(
+                    label: '+ Income',
+                    isSelected: isIncome,
+                    color: AppColors.success,
+                    onTap: () => context.read<TransactionBloc>().add(
+                      TransactionTypeChanged(true),
+                    ),
+                  ),
+
+                  const Gap(12),
+
+                  _TypeButton(
+                    label: '- Expense',
+                    isSelected: !isIncome,
+                    color: AppColors.destructive,
+                    onTap: () => context.read<TransactionBloc>().add(
+                      TransactionTypeChanged(false),
+                    ),
+                  ),
+                ],
+              ),
+
+              CustomTextField(
+                label: 'Amount',
+                controller: _amountController,
+                hint: 'e.g. 500.00',
+                isDecimal: true,
               ),
             ],
           ),
-          
-          CustomTextField(
-            controller: _titleController,
-            hint: 'e.g. Jollibee Funds',
-            label: 'Transaction Name',
-          ),
-          
-          const Gap(16),
-          
-          Row(
-            children: [
-              _TypeButton(
-                label: '+ Income',
-                isSelected: _isIncome,
-                color: AppColors.success,
-                onTap: () => setState(() => _isIncome = true),
-              ),
-              
-              const Gap(12),
-              
-              _TypeButton(
-                label: '- Expense',
-                isSelected: !_isIncome,
-                color: AppColors.destructive,
-                onTap: () => setState(() => _isIncome = false),
-              ),
-            ],
-          ),
-          
-          CustomTextField(
-            label: 'Amount',
-            controller: _amountController,
-            hint: 'e.g. 500.00',
-            isDecimal: true,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

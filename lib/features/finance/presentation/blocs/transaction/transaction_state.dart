@@ -5,11 +5,13 @@ enum TransactionStatus { initial, loading, loaded, error }
 class TransactionState {
   final TransactionStatus status;
   final List<TransactionEntity> transactions;
+  final bool selectedIsIncome;
   final String? errorMessage;
 
   const TransactionState({
     this.status = TransactionStatus.initial,
     this.transactions = const [],
+    this.selectedIsIncome = false,
     this.errorMessage,
   });
 
@@ -62,12 +64,14 @@ class TransactionState {
   TransactionState copyWith({
     TransactionStatus? status,
     List<TransactionEntity>? transactions,
+    bool? selectedIsIncome,
     String? errorMessage,
     bool clearError = false,
   }) {
     return TransactionState(
       status: status ?? this.status,
       transactions: transactions ?? this.transactions,
+      selectedIsIncome: selectedIsIncome ?? this.selectedIsIncome,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }

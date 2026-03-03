@@ -13,3 +13,9 @@ class FinanceTabChanged extends FinanceEvent {
   final int tabIndex;
   FinanceTabChanged(this.tabIndex);
 }
+
+class FinanceBudgetCycleChanged extends FinanceEvent {
+  final String cycle;
+
+  FinanceBudgetCycleChanged(this.cycle);
+}

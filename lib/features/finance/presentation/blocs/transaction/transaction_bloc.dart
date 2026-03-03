@@ -23,6 +23,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<TransactionLoadRequested>(_onLoad);
     on<TransactionAddRequested>(_onAdd);
     on<TransactionDeleteRequested>(_onDelete);
+     on<TransactionTypeChanged>(_onTypeChanged);
   }
 
   Future<void> _onLoad(
@@ -81,5 +82,12 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     } catch(_) {
       emit(state.copyWith(errorMessage: 'Failed to delete transaction'));
     }
+  }
+
+  void _onTypeChanged(
+    TransactionTypeChanged event,
+    Emitter<TransactionState> emit,
+  ) {
+    emit(state.copyWith(selectedIsIncome: event.isIncome));
   }
 }
