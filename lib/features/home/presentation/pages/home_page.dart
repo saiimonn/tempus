@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
+import 'package:tempus/features/finance/presentation/pages/finance_page.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
@@ -155,7 +156,10 @@ class _HomePageState extends State<HomePage> {
           ),
 
 
-          const Center(child: Text("Finances Page")),
+          MultiBlocProvider(
+            providers: FinancePage.createProviders(),
+            child: const FinancePage(),
+          ),
           
           BlocProvider<SubjectBloc>(
             create: (_) {
