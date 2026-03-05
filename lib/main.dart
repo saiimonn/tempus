@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:tempus/features/home/presentation/blocs/home_bloc.dart';
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/features/onboarding/data/data_source/onboarding_local_data_source.dart';
@@ -46,21 +47,33 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final session = Supabase.instance.client.auth.currentSession;
 
+    Widget home;
+
+    if(!onboardingDone) {
+      home = BlocProvider(
+        create: (_) => OnboardingBloc(
+          markOnboardingComplete: markOnboardingComplete,
+        ),
+        child: const Onboarding(),
+      );
+    } else if (session != null) {
+      home = BlocProvider(
+        create: (_) => HomeBloc.create()..add(HomeLoadRequested()),
+        child: const HomePage(),
+      );
+    } else {
+      home = const LoginPage();
+    }
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Tempus',
+      title: "Tempus",
       theme: ThemeData(
         primaryColor: const Color(0xFF1A56DB),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFFAF9F6),
       ),
-      home: !onboardingDone
-        ? BlocProvider(
-          create: (context) => OnboardingBloc(
-            markOnboardingComplete: markOnboardingComplete,
-          ),
-          child: const Onboarding(),
-        )
-        : (session != null ? const HomePage() : const LoginPage()),
+      home: home,
     );
   }
 }

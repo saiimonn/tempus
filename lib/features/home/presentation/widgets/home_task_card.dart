@@ -60,7 +60,7 @@ class HomeTaskCard extends StatelessWidget {
 
                       summary.todayTasks.isEmpty
                           ? const Text(
-                              "Noting on the board yet",
+                              "Nothing on the board yet",
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -84,6 +84,48 @@ class HomeTaskCard extends StatelessWidget {
                   total: total,
                   percent: percent,
                   isEmpty: summary.todayTasks.isEmpty,
+                ),
+              ],
+            ),
+          ),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  summary.todayTasks.isEmpty
+                    ? "0 tasks remaining"
+                    : '$remaining task${remaining == 1 ? '' : 's'} remaining',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text,
+                  ),
+                ),
+
+                GestureDetector(
+                  onTap: onViewAll,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.brandBlue,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "View All",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
