@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:intl/intl.dart';
+import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
+import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/features/finance/presentation/pages/finance_page.dart';
-import 'package:tempus/features/home/presentation/widgets/empty_task_card.dart';
-import 'package:tempus/features/home/presentation/widgets/empty_budget_card.dart';
-import 'package:tempus/features/home/presentation/widgets/empty_schedule_card.dart';
+import 'package:tempus/features/home/presentation/blocs/home_bloc.dart';
+import 'package:tempus/features/home/presentation/widgets/home_budget_card.dart';
+import 'package:tempus/features/home/presentation/widgets/home_schedule_card.dart';
+import 'package:tempus/features/home/presentation/widgets/home_task_card.dart';
 import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
 import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
+import 'package:tempus/features/schedule/presentation/pages/schedule_page.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_local_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_subject.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_subjects.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
-import 'package:tempus/features/schedule/presentation/pages/schedule_page.dart';
 import 'package:tempus/features/tasks/data/data_sources/task_local_data_source.dart';
 import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:tempus/features/tasks/domain/use_cases/add_task.dart';
@@ -64,9 +65,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onItemTapped(int idx) {
-    setState(() {
-      _selectedIndex = idx;
-    });
+    if (idx == 0 && _selectedIndex != 0) {
+      context.read<HomeBloc>().add(HomeLoadRequested());
+    }
+    setState(() => _selectedIndex = idx);
   }
 
   @override
@@ -74,8 +76,6 @@ class _HomePageState extends State<HomePage> {
     final user = Supabase.instance.client.auth.currentUser;
     final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
     final String name = fullName.split(' ').first;
-    // final nameSplit = user?.userMetadata?['full_name'].split(' ');
-    // final String name = nameSplit[0];
     final DateTime now = DateTime.now();
     final date = DateFormat.yMMMMd('en_US').format(now);
 
@@ -127,9 +127,11 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildHomeContent(name),
+          _HomeContent(
+            firstName: name,
+            onNavigateToTab: _onItemTapped,
+          ),
 
-          // PLACEHOLDERS FOR PAGES
           BlocProvider<ScheduleBloc>(
             create: (_) {
               final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
@@ -180,24 +182,148 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget _buildHomeContent(String firstName) {
+class _HomeContent extends StatelessWidget {
+  final String firstName;
+  final ValueChanged<int> onNavigateToTab;
+
+  const _HomeContent({
+    required this.firstName,
+    required this.onNavigateToTab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeBloc, HomeState> (
+      builder: (context, state) {
+        return switch(state.status) {
+          HomeStatus.initial || HomeStatus.loading => _LoadingContent(),
+          HomeStatus.loaded => _LoadedContent(
+            name: firstName,
+            state: state,
+            onNavigateToTasks: () => onNavigateToTab(2),
+            ),
+          HomeStatus.error => _ErrorContent(
+            message: state.errorMessage ?? "Something went wrong",
+            onRetry: () => context.read<HomeBloc>().add(HomeLoadRequested()),
+          ),
+        };
+      },
+    );
+  }
+}
+
+class _LoadingContent extends StatelessWidget {
+  const _LoadingContent();
+  
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.brandBlue),
+    );
+  }
+}
+
+class _ErrorContent extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorContent({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline_rounded,
+              size: 56,
+              color: AppColors.destructive.withValues(alpha: 0.5),
+            ),
+
+            const Gap(16),
+
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.destructive,
+                fontSize: 16,
+              ),
+            ),
+
+            const Gap(24),
+
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.brandBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadedContent extends StatelessWidget {
+  final String name;
+  final HomeState state;
+  final VoidCallback onNavigateToTasks;
+
+  const _LoadedContent({
+    required this.name,
+    required this.state,
+    required this.onNavigateToTasks,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = state.summary!;
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
-          WText("Welcome, $firstName", className: "text-2xl font-bold mb-4"),
+          Text(
+            "Welcome, $name",
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.text,
+            ),
+          ),
 
-          EmptyTaskCard(),
-          const SizedBox(height: 20),
+          const Gap(20),
 
-          EmptyBudgetCard(),
-          const SizedBox(height: 20),
+          HomeTaskCard(
+            summary: summary,
+            onViewAll: onNavigateToTasks,
+          ),
 
-          EmptyScheduleCard(),
-          const SizedBox(height: 20),
+          const Gap(16),
+
+          HomeBudgetCard(finance: summary.finance),
+
+          const Gap(16),
+
+          HomeScheduleCard(entries: summary.todaySchedule),
+
+          const Gap(16),
         ],
       ),
     );

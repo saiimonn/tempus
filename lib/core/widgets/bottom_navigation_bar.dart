@@ -24,8 +24,10 @@ class BottomNavBar extends StatelessWidget {
         onTap: onTap,
         selectedItemColor: AppColors.brandBlue,
         unselectedItemColor: AppColors.foreground,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(fontSize: 12),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today_rounded), label: 'Schedule'),
