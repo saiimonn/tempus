@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_button.dart';
 import 'package:tempus/features/schedule/presentation/widgets/empty_schedule.dart';
-import 'package:tempus/features/schedule/presentation/widgets/schedule_entry_card.dart';
 import 'package:tempus/features/schedule/presentation/widgets/time_table_grid.dart';
 
 class SchedulePage extends StatelessWidget {
@@ -69,36 +67,6 @@ class _ScheduleContent extends StatelessWidget {
               child: TimetableGrid(state: state),
             ),
           ),
-
-          const SliverToBoxAdapter(child: Gap(24)),
-
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Classes',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.text,
-                ),
-              ),
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: Gap(12)),
-
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, i) => Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: ScheduleEntryCard(entry: state.entries[i]),
-              ),
-              childCount: state.entries.length,
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: Gap(40)),
         ],
       ],
     );
