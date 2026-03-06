@@ -29,10 +29,6 @@ class TimetableGrid extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Day navigation header
-// ---------------------------------------------------------------------------
-
 class _DayNavHeader extends StatelessWidget {
   final ScheduleLoaded state;
 
@@ -152,17 +148,13 @@ class _NavArrow extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Day timeline
-// ---------------------------------------------------------------------------
-
 class _DayTimeline extends StatelessWidget {
   final ScheduleLoaded state;
 
   static const double _hourHeight = 64.0;
   static const double _timeColWidth = 54.0;
-  static const int _startHour = 6;
-  static const int _endHour = 22;
+  static const int _startHour = 0;
+  static const int _endHour = 24;
   static const int _totalHours = _endHour - _startHour;
 
   const _DayTimeline({required this.state});
@@ -247,7 +239,7 @@ class _DayTimeline extends StatelessWidget {
     final gridHeight = _totalHours * _hourHeight;
 
     return SizedBox(
-      height: 420,
+      height: 640,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.only(bottom: 16, top: 4),
@@ -414,10 +406,6 @@ class _DayTimeline extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Internal layout model
-// ---------------------------------------------------------------------------
 
 class _PositionedEntry {
   final ScheduleEntryEntity entry;
