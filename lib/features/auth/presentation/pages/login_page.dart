@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:tempus/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:tempus/features/auth/presentation/bloc/auth_event.dart';
-import 'package:tempus/features/auth/presentation/bloc/auth_state.dart';
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'register_page.dart';

@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/scores_entity.dart';

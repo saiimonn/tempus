@@ -1,6 +1,11 @@
 part of 'scores_bloc.dart';
 
-sealed class ScoresState {}
+sealed class ScoresState extends Equatable {
+  const ScoresState();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class ScoresInitial extends ScoresState {}
 
@@ -11,11 +16,14 @@ class ScoresLoaded extends ScoresState {
   final Map<int, List<ScoresEntity>> scores;
   final Set<int> expandedCategories;
 
-  ScoresLoaded({
+  const ScoresLoaded({
     required this.categories,
     required this.scores,
     required this.expandedCategories,
   });
+
+  @override
+  List<Object?> get props => [categories, scores, expandedCategories];
 
   ScoresLoaded copyWith({
     List<GradeCategoryEntity>? categories,
@@ -32,5 +40,8 @@ class ScoresLoaded extends ScoresState {
 
 class ScoresError extends ScoresState {
   final String message;
-  ScoresError(this.message);
+  const ScoresError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }

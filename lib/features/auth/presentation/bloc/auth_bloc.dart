@@ -1,11 +1,13 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:tempus/features/auth/data/data_sources/auth_remote_data_source.dart';
 import 'package:tempus/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:tempus/features/auth/domain/use_cases/sign_in.dart';
 import 'package:tempus/features/auth/domain/use_cases/sign_up.dart';
-import 'package:tempus/features/auth/presentation/bloc/auth_event.dart';
-import 'package:tempus/features/auth/presentation/bloc/auth_state.dart';
+
+part 'auth_event.dart';
+part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInUseCase _signInUseCase;

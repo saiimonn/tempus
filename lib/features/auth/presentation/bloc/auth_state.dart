@@ -1,6 +1,8 @@
+part of 'auth_bloc.dart';
+
 enum AuthStatus { initial, loading, success, failure }
 
-class AuthState {
+class AuthState extends Equatable {
   final bool isPasswordVisible;
   final AuthStatus status;
   final String? errorMessage;
@@ -10,6 +12,9 @@ class AuthState {
     required this.status,
     this.errorMessage,
   });
+  
+  @override
+  List<Object?> get props => [isPasswordVisible, status, errorMessage];
 
   const AuthState.initial()
     : isPasswordVisible = false,

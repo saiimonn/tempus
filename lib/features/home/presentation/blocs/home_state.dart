@@ -2,7 +2,7 @@ part of 'home_bloc.dart';
 
 enum HomeStatus { initial, loading, loaded, error }
 
-class HomeState {
+class HomeState extends Equatable {
   final HomeStatus status;
   final HomeSummaryEntity? summary;
   final String? errorMessage;
@@ -29,4 +29,7 @@ class HomeState {
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
+
+  @override
+  List<Object?> get props => [status, summary, errorMessage];
 }
