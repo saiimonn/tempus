@@ -1,11 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_detail_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
 import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/category_tile.dart';
+
+final _fakeDetail = SubjectDetailEntity(
+  subject: const SubjectEntity(
+    id: '1',
+    name: 'Loading Subject Name',
+    code: 'LOAD 1',
+    instructor: 'Loading Instructor',
+    units: 3,
+    grades: {'prelim': '--', 'midterm': '--', 'final': '--'},
+  ),
+  categories: const [
+    GradeCategoryEntity(id: 1, name: 'Loading Category', weight: 40),
+    GradeCategoryEntity(id: 2, name: 'Loading Category', weight: 30),
+    GradeCategoryEntity(id: 3, name: 'Loading Category', weight: 30),
+  ],
+  estimatedGrade: 91.5,
+);
 
 class SubjectDetailPage extends StatelessWidget {
   final SubjectEntity subject;
@@ -48,14 +67,15 @@ class SubjectDetailPage extends StatelessWidget {
             ),
           ),
           body: switch (state) {
-            SubjectDetailLoading() => const Center(
-                child: CircularProgressIndicator(color: AppColors.brandBlue),
-              ),
-            SubjectDetailLoaded(:final detail) =>
-              _SubjectDetailContent(detail: detail),
             SubjectDetailError(:final message) =>
               Center(child: Text(message)),
-            _ => const SizedBox.shrink(),
+            _ => Skeletonizer(
+              enabled: state is SubjectDetailInitial || state is SubjectDetailLoading,
+              child: _SubjectDetailContent(
+                detail: state is SubjectDetailLoaded ? state.detail : _fakeDetail,
+                isLoading: state is SubjectDetailInitial || state is SubjectDetailLoading,
+              ),
+            ),
           },
         );
       },
@@ -65,8 +85,9 @@ class SubjectDetailPage extends StatelessWidget {
 
 class _SubjectDetailContent extends StatelessWidget {
   final SubjectDetailEntity detail;
+  final bool isLoading;
 
-  const _SubjectDetailContent({required this.detail});
+  const _SubjectDetailContent({required this.detail, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -93,14 +114,17 @@ class _SubjectDetailContent extends StatelessWidget {
           ...detail.categories.map(
             (cat) => CategoryTile(
               category: cat,
-              onDelete: () => context.read<SubjectDetailBloc>().add(
-                    SubjectDetailCategoryDeleteRequested(cat.id),
-                  ),
+              onDelete: () {
+                if (isLoading) return;
+                context.read<SubjectDetailBloc>().add(
+                      SubjectDetailCategoryDeleteRequested(cat.id),
+                    );
+              },
             ),
           ),
         const SizedBox(height: 8),
         _AddCategoryCard(
-          onTap: () => _showAddCategorySheet(context),
+          onTap: isLoading ? null : () => _showAddCategorySheet(context),
         ),
         const SizedBox(height: 20),
         _InfoCard(),
@@ -189,7 +213,7 @@ class _EmptyCategories extends StatelessWidget {
 }
 
 class _AddCategoryCard extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   const _AddCategoryCard({required this.onTap});
 
   @override

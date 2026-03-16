@@ -3,16 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:gap/gap.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
+import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/finance/presentation/pages/finance_page.dart';
+import 'package:tempus/features/home/domain/entities/home_summary_entity.dart';
 import 'package:tempus/features/home/presentation/blocs/home_bloc.dart';
 import 'package:tempus/features/home/presentation/widgets/home_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/home_schedule_card.dart';
 import 'package:tempus/features/home/presentation/widgets/home_task_card.dart';
 import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
@@ -26,12 +30,33 @@ import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
 import 'package:tempus/features/tasks/data/data_sources/task_local_data_source.dart';
 import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
+import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/domain/use_cases/add_task.dart';
 import 'package:tempus/features/tasks/domain/use_cases/delete_task.dart';
 import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
 import 'package:tempus/features/tasks/domain/use_cases/update_task.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
+
+final _fakeSummary = HomeSummaryEntity(
+  todayTasks: List.generate(
+    3,
+    (i) => TaskEntity(id: i, title: 'Loading task title here', status: 'pending'),
+  ),
+  todaySchedule: List.generate(
+    3,
+    (i) => ScheduleEntryEntity(
+      id: i,
+      subId: 0,
+      subjectName: 'Loading Subject Name',
+      subjectCode: 'LOAD',
+      days: [],
+      startTime: '08:00',
+      endTime: '10:00',
+    ),
+  ),
+  finance: const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
+);
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -97,10 +122,9 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 24,
               ),
             ),
-
             Text(
               date,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.text,
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
@@ -108,22 +132,19 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Account',
             onPressed: () {},
           ),
-
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
             tooltip: 'Sign Out',
             onPressed: _signOut,
           ),
         ],
       ),
-
       body: IndexedStack(
         index: _selectedIndex,
         children: [
@@ -131,7 +152,6 @@ class _HomePageState extends State<HomePage> {
             firstName: name,
             onNavigateToTab: _onItemTapped,
           ),
-
           BlocProvider<ScheduleBloc>(
             create: (_) {
               final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
@@ -143,7 +163,6 @@ class _HomePageState extends State<HomePage> {
             },
             child: const SchedulePage(),
           ),
-
           BlocProvider<TaskBloc>(
             create: (_) {
               final repo = TaskRepositoryImpl(TaskLocalDataSource());
@@ -156,13 +175,10 @@ class _HomePageState extends State<HomePage> {
             },
             child: const TasksPage(),
           ),
-
-
           MultiBlocProvider(
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
-          
           BlocProvider<SubjectBloc>(
             create: (_) {
               final repo = SubjectRepositoryImpl(SubjectLocalDataSource());
@@ -175,7 +191,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-
       bottomNavigationBar: BottomNavBar(
         currentIdx: _selectedIndex,
         onTap: _onItemTapped,
@@ -195,32 +210,29 @@ class _HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeBloc, HomeState> (
+    return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
-        return switch(state.status) {
-          HomeStatus.initial || HomeStatus.loading => _LoadingContent(),
-          HomeStatus.loaded => _LoadedContent(
-            name: firstName,
-            state: state,
-            onNavigateToTasks: () => onNavigateToTab(2),
-            ),
-          HomeStatus.error => _ErrorContent(
-            message: state.errorMessage ?? "Something went wrong",
+        if (state.status == HomeStatus.error) {
+          return _ErrorContent(
+            message: state.errorMessage ?? 'Something went wrong',
             onRetry: () => context.read<HomeBloc>().add(HomeLoadRequested()),
-          ),
-        };
-      },
-    );
-  }
-}
+          );
+        }
 
-class _LoadingContent extends StatelessWidget {
-  const _LoadingContent();
-  
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.brandBlue),
+        final isLoading = state.status == HomeStatus.initial ||
+            state.status == HomeStatus.loading;
+
+        return Skeletonizer(
+          enabled: isLoading,
+          child: _LoadedContent(
+            name: firstName,
+            state: isLoading
+                ? HomeState(status: HomeStatus.loaded, summary: _fakeSummary)
+                : state,
+            onNavigateToTasks: () => onNavigateToTab(2),
+          ),
+        );
+      },
     );
   }
 }
@@ -229,10 +241,7 @@ class _ErrorContent extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const _ErrorContent({
-    required this.message,
-    required this.onRetry,
-  });
+  const _ErrorContent({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -247,20 +256,13 @@ class _ErrorContent extends StatelessWidget {
               size: 56,
               color: AppColors.destructive.withValues(alpha: 0.5),
             ),
-
             const Gap(16),
-
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.destructive,
-                fontSize: 16,
-              ),
+              style: const TextStyle(color: AppColors.destructive, fontSize: 16),
             ),
-
             const Gap(24),
-
             ElevatedButton(
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
@@ -307,22 +309,12 @@ class _LoadedContent extends StatelessWidget {
               color: AppColors.text,
             ),
           ),
-
           const Gap(20),
-
-          HomeTaskCard(
-            summary: summary,
-            onViewAll: onNavigateToTasks,
-          ),
-
+          HomeTaskCard(summary: summary, onViewAll: onNavigateToTasks),
           const Gap(16),
-
           HomeBudgetCard(finance: summary.finance),
-
           const Gap(16),
-
           HomeScheduleCard(entries: summary.todaySchedule),
-
           const Gap(16),
         ],
       ),
