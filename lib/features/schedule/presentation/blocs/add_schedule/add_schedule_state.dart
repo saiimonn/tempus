@@ -1,6 +1,6 @@
 part of 'add_schedule_bloc.dart';
 
-class AddScheduleState {
+class AddScheduleState extends Equatable {
   final ScheduleSubjectEntity? selectedSubject;
   final Set<String> selectedDays;
   final TimeOfDay startTime;
@@ -12,6 +12,9 @@ class AddScheduleState {
     this.startTime = const TimeOfDay(hour: 7, minute: 30),
     this.endTime = const TimeOfDay(hour: 9, minute: 0),
   });
+  
+  @override
+  List<Object?> get props => [selectedSubject, selectedDays,startTime, endTime];
 
   bool get timeInvalid {
     final s = startTime.hour * 60 + startTime.minute;
@@ -42,8 +45,9 @@ class AddScheduleState {
     bool clearSubject = false,
   }) {
     return AddScheduleState(
-      selectedSubject:
-          clearSubject ? null : (selectedSubject ?? this.selectedSubject),
+      selectedSubject: clearSubject
+          ? null
+          : (selectedSubject ?? this.selectedSubject),
       selectedDays: selectedDays ?? this.selectedDays,
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,

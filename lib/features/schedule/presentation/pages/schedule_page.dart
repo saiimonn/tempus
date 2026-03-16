@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_button.dart';
 import 'package:tempus/features/schedule/presentation/widgets/empty_schedule.dart';
@@ -15,8 +18,8 @@ class SchedulePage extends StatelessWidget {
       builder: (context, state) {
         return switch (state) {
           ScheduleLoading() => const Center(
-              child: CircularProgressIndicator(color: AppColors.brandBlue),
-            ),
+            child: CircularProgressIndicator(color: AppColors.brandBlue),
+          ),
           ScheduleLoaded() => _ScheduleContent(state: state),
           ScheduleError(:final message) => Center(child: Text(message)),
           _ => const SizedBox.shrink(),

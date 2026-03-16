@@ -1,11 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
+import 'package:tempus/features/subjects/domain/entities/scores_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/presentation/bloc/scores/scores_bloc.dart';
 import 'package:tempus/features/subjects/presentation/widgets/add_score_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/score_section.dart';
+
+const _fakeCategories = [
+  GradeCategoryEntity(id: 1, name: 'Loading Category', weight: 40),
+  GradeCategoryEntity(id: 2, name: 'Loading Category', weight: 30),
+  GradeCategoryEntity(id: 3, name: 'Loading Category', weight: 30),
+];
+
+final _fakeScores = {
+  1: const [
+    ScoresEntity(id: 1, title: 'Loading Score Item', scoreValue: 42, maxScore: 50),
+    ScoresEntity(id: 2, title: 'Loading Score Item', scoreValue: 18, maxScore: 20),
+  ],
+  2: const [
+    ScoresEntity(id: 3, title: 'Loading Score Item', scoreValue: 24, maxScore: 30),
+  ],
+  3: const [
+    ScoresEntity(id: 4, title: 'Loading Score Item', scoreValue: 90, maxScore: 100),
+  ],
+};
 
 class ScoresPage extends StatelessWidget {
   final SubjectEntity subject;
@@ -54,14 +76,27 @@ class ScoresPage extends StatelessWidget {
       ),
       body: BlocBuilder<ScoresBloc, ScoresState>(
         builder: (context, state) {
-          return switch(state) {
-            ScoresLoading() => const Center(
-              child: CircularProgressIndicator(color: AppColors.brandBlue),
+          if (state is ScoresError) {
+            return Center(child: Text(state.message));
+          }
+
+          final isLoading = state is ScoresInitial || state is ScoresLoading;
+          final loaded = state is ScoresLoaded
+              ? state
+              : ScoresLoaded(
+                  categories: _fakeCategories,
+                  scores: _fakeScores,
+                  expandedCategories: _fakeCategories.map((c) => c.id).toSet(),
+                );
+
+          return Skeletonizer(
+            enabled: isLoading,
+            child: _ScoresContent(
+              state: loaded,
+              subject: subject,
+              isLoading: isLoading,
             ),
-            ScoresLoaded() => _ScoresContent(state: state, subject: subject),
-            ScoresError(: final message) => Center(child: Text(message)),
-            _ => const SizedBox.shrink(),
-          };
+          );
         },
       ),
     );
@@ -71,10 +106,12 @@ class ScoresPage extends StatelessWidget {
 class _ScoresContent extends StatelessWidget {
   final ScoresLoaded state;
   final SubjectEntity subject;
+  final bool isLoading;
 
   const _ScoresContent({
     required this.state,
     required this.subject,
+    required this.isLoading,
   });
 
   void _showAddScoreSheet(BuildContext context, int categoryId) {
@@ -92,7 +129,7 @@ class _ScoresContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.categories.isEmpty) {
+    if (!isLoading && state.categories.isEmpty) {
       return _buildNoCategories();
     }
 
@@ -125,17 +162,23 @@ class _ScoresContent extends StatelessWidget {
                       category: c,
                       scores: catScores,
                       isExpanded: isExpanded,
-                      onToggle: () => context
-                        .read<ScoresBloc>()
-                        .add(ScoresCategoryToggled(c.id)),
-                      onAdd: () => _showAddScoreSheet(context, c.id),
+                      onToggle: () {
+                        if (isLoading) return;
+                        context.read<ScoresBloc>().add(ScoresCategoryToggled(c.id));
+                      },
+                      onAdd: () {
+                        if (isLoading) return;
+                        _showAddScoreSheet(context, c.id);
+                      },
                       onDeleteScore: (scoreId) =>
-                        context.read<ScoresBloc>().add(
-                          ScoresDeleteRequested(
-                            categoryId: c.id,
-                            scoreId: scoreId,
-                          ),
-                        ),
+                          isLoading
+                              ? null
+                              : context.read<ScoresBloc>().add(
+                                  ScoresDeleteRequested(
+                                    categoryId: c.id,
+                                    scoreId: scoreId,
+                                  ),
+                                ),
                     );
                   }).toList(),
                 ),
@@ -150,8 +193,11 @@ class _ScoresContent extends StatelessWidget {
             categories: state.categories
               .map((c) => (id: c.id, name: c.name))
               .toList(),
-            onSelected: (categoryId) => 
-              _showAddScoreSheet(context, categoryId),
+            onSelected: (categoryId) {
+              if (isLoading) return;
+              _showAddScoreSheet(context, categoryId);
+            },
+            isLoading: isLoading,
           ),
         ),
       ],
@@ -198,10 +244,12 @@ class _ScoresContent extends StatelessWidget {
 class _AddScoreFab extends StatelessWidget {
   final List<({int id, String name})> categories;
   final void Function(int categoryId) onSelected;
+  final bool isLoading;
 
   const _AddScoreFab({
     required this.categories,
     required this.onSelected,
+    this.isLoading = false,
   });
 
   void _handleTap(BuildContext context) {
@@ -228,7 +276,7 @@ class _AddScoreFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
-      onPressed: () => _handleTap(context),
+      onPressed: isLoading ? null : () => _handleTap(context),
       backgroundColor: AppColors.brandBlue,
       elevation: 4,
       child: const Icon(Icons.add, color: Colors.white),

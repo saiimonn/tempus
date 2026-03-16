@@ -2,7 +2,7 @@ part of 'finance_bloc.dart';
 
 enum FinanceStatus { initial, loading, loaded, error }
 
-class FinanceState {
+class FinanceState extends Equatable {
   final FinanceStatus status;
   final FinanceEntity? finance;
   final int selectedTabIndex;
@@ -16,6 +16,9 @@ class FinanceState {
     this.selectedBudgetCycle = 'Weekly',
     this.errorMessage,
   });
+  
+  @override
+  List<Object?> get props => [status, finance, selectedTabIndex, selectedBudgetCycle, errorMessage];
 
   FinanceState copyWith({
     FinanceStatus? status,

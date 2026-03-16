@@ -1,13 +1,10 @@
 part of 'onboarding_bloc.dart';
 
-class OnboardingState {
+class OnboardingState extends Equatable {
   final int currentPage;
   final bool isComplete;
 
-  const OnboardingState({
-    this.currentPage = 0,
-    this.isComplete = false,
-  });
+  const OnboardingState({this.currentPage = 0, this.isComplete = false});
 
   OnboardingState copyWith({int? currentPage, bool? isComplete}) {
     return OnboardingState(
@@ -15,4 +12,7 @@ class OnboardingState {
       isComplete: isComplete ?? this.isComplete,
     );
   }
+
+  @override
+  List<Object?> get props => [currentPage, isComplete];
 }

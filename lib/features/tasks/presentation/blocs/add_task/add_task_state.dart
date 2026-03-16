@@ -4,6 +4,7 @@ class SelectedSubject {
   final int id;
   final String name;
   final String code;
+
   const SelectedSubject({
     required this.id,
     required this.name,
@@ -11,16 +12,19 @@ class SelectedSubject {
   });
 }
 
-class AddTaskState {
+class AddTaskState extends Equatable {
   final DateTime? dueDate;
   final String? dueTime;
   final SelectedSubject? selectedSubject;
 
   const AddTaskState({
-    this.dueDate,
-    this.dueTime,
-    this.selectedSubject,
+    this.dueDate, 
+    this.dueTime, 
+    this.selectedSubject
   });
+
+  @override
+  List<Object?> get props => [dueDate, dueTime, selectedSubject];
 
   String get dueDateLabel {
     if (dueDate == null) return 'No Date';
@@ -52,8 +56,9 @@ class AddTaskState {
     return AddTaskState(
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       dueTime: clearDueTime ? null : (dueTime ?? this.dueTime),
-      selectedSubject:
-          clearSubject ? null : (selectedSubject ?? this.selectedSubject),
+      selectedSubject: clearSubject
+          ? null
+          : (selectedSubject ?? this.selectedSubject),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';

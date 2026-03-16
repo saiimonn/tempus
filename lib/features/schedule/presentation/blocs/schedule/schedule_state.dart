@@ -1,6 +1,11 @@
 part of 'schedule_bloc.dart';
 
-sealed class ScheduleState {}
+sealed class ScheduleState extends Equatable {
+  const ScheduleState();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class ScheduleInitial extends ScheduleState {}
 
@@ -21,21 +26,24 @@ class ScheduleLoaded extends ScheduleState {
     'Sunday',
   ];
 
-  ScheduleLoaded({
+  const ScheduleLoaded({
     required this.subjects,
     required this.entries,
     this.selectedDayIndex = 0,
   });
 
+  @override
+  List<Object?> get props => [subjects, entries, selectedDayIndex];
+
   String get selectedDayName => dayNames[selectedDayIndex];
 
-  List <ScheduleEntryEntity> get entriesForSelectedDay => 
-    entries.where((e) => e.days.contains(selectedDayName)).toList();
+  List<ScheduleEntryEntity> get entriesForSelectedDay =>
+      entries.where((e) => e.days.contains(selectedDayName)).toList();
 
   ScheduleLoaded copyWith({
     List<ScheduleSubjectEntity>? subjects,
     List<ScheduleEntryEntity>? entries,
-    int? selectedDayIndex
+    int? selectedDayIndex,
   }) {
     return ScheduleLoaded(
       subjects: subjects ?? this.subjects,

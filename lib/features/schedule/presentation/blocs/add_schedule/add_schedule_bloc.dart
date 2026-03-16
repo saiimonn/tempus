@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
@@ -5,7 +6,7 @@ import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity
 part 'add_schedule_event.dart';
 part 'add_schedule_state.dart';
 
-const ScheduleDays = [
+const scheduleDays = [
   'Monday',
   'Tuesday',
   'Wednesday',

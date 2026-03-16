@@ -262,7 +262,7 @@ class _DayChips extends StatelessWidget {
         return Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: ScheduleDays.map((day) {
+          children: scheduleDays.map((day) {
             final isSelected = state.selectedDays.contains(day);
 
             return GestureDetector(

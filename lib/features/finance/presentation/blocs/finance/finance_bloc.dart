@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/finance/domain/use_cases/get_finance.dart';
@@ -19,7 +20,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     on<FinanceLoadRequested>(_onLoad);
     on<FinanceBudgetUpdateRequested>(_onUpdateBudget);
     on<FinanceTabChanged>(_onTabChanged);
-     on<FinanceBudgetCycleChanged>(_onBudgetCycleChanged);
+    on<FinanceBudgetCycleChanged>(_onBudgetCycleChanged);
   }
 
   Future<void> _onLoad(
@@ -27,6 +28,8 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
     Emitter<FinanceState> emit,
   ) async {
     emit(state.copyWith(status: FinanceStatus.loading));
+
+    await Future.delayed(const Duration(seconds: 3));
 
     try {
       final finance = await _getFinance();
