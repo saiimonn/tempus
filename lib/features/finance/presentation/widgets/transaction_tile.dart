@@ -10,10 +10,53 @@ class TransactionTile extends StatelessWidget {
 
   const TransactionTile({super.key, required this.transaction});
 
+  String get _subtitleText {
+    final parts = <String>[];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final txDay = DateTime(
+      transaction.createdAt.year,
+      transaction.createdAt.month,
+      transaction.createdAt.day,
+    );
+
+    final diff = txDay.difference(today).inDays;
+
+    if (diff == 0) {
+      parts.add('Today');
+    } else if (diff == -1) {
+      parts.add('Yesterday');
+    } else if (diff < 0 && diff > -7) {
+      parts.add('${diff.abs()} days ago');
+    } else {
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'June',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      parts.add(
+        '${months[transaction.createdAt.month - 1]} ${transaction.createdAt.day} ',
+      );
+    }
+    parts.add(transaction.isIncome ? 'Income' : 'Expense');
+
+    return parts.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.isIncome;
-    final color = isIncome ? AppColors.success : AppColors.destructive;
+    final amountColor = isIncome ? AppColors.success : AppColors.destructive;
     final sign = isIncome ? '+' : '-';
 
     return Dismissible(
@@ -26,49 +69,48 @@ class TransactionTile extends StatelessWidget {
           color: AppColors.destructive.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
+
         child: const Icon(
           Icons.delete_outline,
           color: AppColors.destructive,
           size: 22,
         ),
       ),
+
       onDismissed: (_) {
         context.read<TransactionBloc>().add(
           TransactionDeleteRequested(transaction.id),
         );
       },
-
+      
       child: Container(
-        margin: const EdgeInsets.only(bottom: 1),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(
-            bottom: BorderSide(color: Colors.grey.shade100, width: 1),
-          ),
-        ),
-
+        margin: const EdgeInsets.only(bottom: 4),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 38,
-              height: 38,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                shape: BoxShape.circle,
+                color: amountColor.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: amountColor.withValues(alpha: 0.4),
+                  width: 1.5,
+                ),
               ),
-
+              
               child: Icon(
                 isIncome
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                size: 18,
-                color: color,
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+                  size: 12,
+                  color: amountColor,
               ),
             ),
-
+            
             const Gap(12),
-
+            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,9 +123,9 @@ class TransactionTile extends StatelessWidget {
                       color: AppColors.text,
                     ),
                   ),
-
+                  
                   Text(
-                    _formatDate(transaction.createdAt),
+                    _subtitleText,
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.foreground,
@@ -92,36 +134,18 @@ class TransactionTile extends StatelessWidget {
                 ],
               ),
             ),
-
+            
             Text(
-              '$sign${transaction.amount.toStringAsFixed(0)}',
+              '$sign₱${transaction.amount.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: amountColor,
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }

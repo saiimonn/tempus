@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/finance/domain/entities/transaction_entity.dart';
 import 'package:tempus/features/finance/domain/use_cases/add_transaction.dart';

@@ -30,52 +30,63 @@ class TransactionsTab extends StatelessWidget {
           return _buildEmptyState(context);
         }
 
-        final grouped = state.groupedTransactions;
-        final sortedKeys = grouped.keys.toList();
-
         return Stack(
           children: [
-            ListView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              itemCount: sortedKeys.length,
-              itemBuilder: (context, i) {
-                final weekLabel = sortedKeys[i];
-                final txList = grouped[weekLabel]!;
+            CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Transactions',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
+                          ),
+                        ),
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8, top: 4),
-                      child: Text(
-                        weekLabel,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.foreground,
+                        Text(
+                          '${state.transactions.length} total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.foreground,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppColors.inputFill.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: txList
-                            .map((tx) => TransactionTile(transaction: tx))
-                            .toList(),
-                      ),
+                  ),
+                ),
+
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final tx = state.transactions[index];
+                      final isLast = index == state.transactions.length - 1;
+
+                      return Column(
+                        children: [
+                          TransactionTile(transaction: tx),
+                          if (!isLast)
+                            const Divider(
+                              height: 1,
+                              thickness: 0.5,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                        ],
+                      );
+                    }, 
+                    childCount: state.transactions.length
                     ),
-                    const Gap(16),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
+            
             Positioned(
               bottom: 20,
               right: 20,
@@ -83,15 +94,18 @@ class TransactionsTab extends StatelessWidget {
                 onPressed: () => _showAddTransactionSheet(context),
                 backgroundColor: AppColors.brandBlue,
                 elevation: 4,
-                child: const Icon(Icons.add, color: Colors.white),
+                child: const Icon(
+                  Icons.add, 
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
         );
-      }
+      },
     );
   }
-  
+
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(

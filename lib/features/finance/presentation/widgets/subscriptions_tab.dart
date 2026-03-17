@@ -32,77 +32,58 @@ class SubscriptionsTab extends StatelessWidget {
 
         return Stack(
           children: [
-            ListView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-              children: [
-                // Summary card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandBlue,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Total Monthly',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                          const Gap(4),
-                          Text(
-                            '₱${state.totalMonthly.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${state.subscriptions.length} active',
+            CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Subscriptions',
                           style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.text,
                           ),
                         ),
-                      ),
-                    ],
+
+                        Text(
+                          '${state.subscriptions.length} total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
-                const Gap(20),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final tx = state.subscriptions[index];
+                      final isLast = index == state.subscriptions.length - 1;
 
-                const Text(
-                  'Subscriptions',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
+                      return Column(
+                        children: [
+                          SubscriptionTile(subscription: tx),
+                          if (!isLast) 
+                            const Divider(
+                              height: 1,
+                              thickness: 0.5,
+                              color: Color(0xFFEEEEEE),
+                            ),
+                        ],
+                      );
+                    },
+                    childCount: state.subscriptions.length,
+                    ),
                   ),
                 ),
-
-                const Gap(12),
-
-                ...state.subscriptions
-                    .map((s) => SubscriptionTile(subscription: s)),
               ],
             ),
             Positioned(
