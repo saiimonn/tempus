@@ -17,15 +17,15 @@ class SubscriptionTile extends StatelessWidget {
   String get _initials {
     final words = subscription.title.trim().split(' ');
     if (words.length >= 2) return '${words[0][0]}${words[1][0]}'.toUpperCase();
-    return subscription.title.substring(0, subscription.title.length.clamp(0, 2)).toUpperCase();
+    return subscription.title
+        .substring(0, subscription.title.length.clamp(0, 2))
+        .toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = _iconColor;
-
     return Dismissible(
-      key: Key('sub_${subscription.id}'),
+      key: Key('tx_${subscription.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -34,45 +34,42 @@ class SubscriptionTile extends StatelessWidget {
           color: AppColors.destructive.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.delete_outline, color: AppColors.destructive, size: 22),
-      ),
-      onDismissed: (_) {
-        context.read<SubscriptionBloc>().add(SubscriptionDeleteRequested(subscription.id));
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
+
+        child: const Icon(
+          Icons.delete_outline,
+          color: AppColors.destructive,
+          size: 22,
         ),
+      ),
+
+      onDismissed: (_) {
+        context.read<SubscriptionBloc>().add(
+          SubscriptionDeleteRequested(subscription.id),
+        );
+      },
+      
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: Text(
-                  _initials,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
-                ),
+            Text(
+              subscription.title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                subscription.title,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.text),
-              ),
-            ),
+            
             Text(
               '₱${subscription.monthlyPrice.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.text),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.text,
+              ),
             ),
           ],
         ),

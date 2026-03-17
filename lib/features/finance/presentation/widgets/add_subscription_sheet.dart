@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/finance/presentation/blocs/subscription/subscription_bloc.dart';
 
 class AddSubscriptionSheet extends StatefulWidget {
@@ -52,6 +52,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handle bar
           Center(
             child: Container(
               margin: const EdgeInsets.symmetric(vertical: 12),
@@ -64,6 +65,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
             ),
           ),
 
+          // Header row
           Row(
             children: [
               GestureDetector(
@@ -73,7 +75,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
               const Expanded(
                 child: Center(
                   child: Text(
-                    'Add new Subscription',
+                    'Add Subscription',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -82,28 +84,43 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
                   ),
                 ),
               ),
-
-              const Gap(22),
+              GestureDetector(
+                onTap: _confirm,
+                child: const Icon(
+                  Icons.check,
+                  size: 22,
+                  color: AppColors.brandBlue,
+                ),
+              ),
             ],
           ),
 
-          CustomTextField(
-            label: 'Subscription Name',
-            hint: 'e.g. Netflix',
+          const Gap(24),
+
+          UnderlineTextField(
+            label: 'NAME',
             controller: _titleController,
+            hint: 'e.g. Netflix',
+            autofocus: true,
+            textInputAction: TextInputAction.next,
           ),
 
-          CustomTextField(
-            label: 'Monthly Price',
-            hint: '159.99',
+          const Gap(20),
+
+          UnderlineTextField(
+            label: 'MONTHLY PRICE',
             controller: _priceController,
+            hint: '0.00',
+            isDecimal: true,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _confirm(),
           ),
 
           const Gap(28),
 
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 48,
             child: ElevatedButton(
               onPressed: _confirm,
               style: ElevatedButton.styleFrom(
@@ -116,7 +133,7 @@ class _AddSubscriptionSheetState extends State<AddSubscriptionSheet> {
               ),
               child: const Text(
                 'Confirm',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ),

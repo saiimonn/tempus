@@ -2,7 +2,7 @@ part of 'subscription_bloc.dart';
 
 enum SubscriptionStatus { initial, loading, loaded, error }
 
-class SubscriptionState {
+class SubscriptionState extends Equatable {
   final SubscriptionStatus status;
   final List<SubscriptionEntity> subscriptions;
   final String? errorMessage;
@@ -12,6 +12,9 @@ class SubscriptionState {
     this.subscriptions = const [],
     this.errorMessage,
   });
+
+  @override
+  List<Object?> get props => [status, subscriptions, errorMessage];
 
   double get totalMonthly =>
       subscriptions.fold(0, (sum, s) => sum + s.monthlyPrice);

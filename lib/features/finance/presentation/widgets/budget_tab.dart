@@ -53,16 +53,10 @@ class BudgetTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Budget ring
+                  // Budget ring card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: AppColors.inputFill.withValues(alpha: 0.5)),
-                    ),
                     child: BudgetRing(
                       finance: finance,
                       onEditBudget: () =>
@@ -72,29 +66,25 @@ class BudgetTab extends StatelessWidget {
 
                   const Gap(20),
 
-                  // Spent this month row
+                  // Spent this week row
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppColors.inputFill.withValues(alpha: 0.5)),
+                      horizontal: 16,
+                      vertical: 14,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.receipt_long_outlined,
                               size: 18,
                               color: AppColors.foreground,
                             ),
                             const SizedBox(width: 10),
                             const Text(
-                              'Spent this month',
+                              'Spent this week',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: AppColors.text,
@@ -133,14 +123,10 @@ class BudgetTab extends StatelessWidget {
                         onTap: () => _showAddTransactionSheet(context),
                         child: const Row(
                           children: [
-                            Icon(
-                              Icons.add,
-                              size: 16,
-                              color: AppColors.brandBlue,
-                            ),
+                            Icon(Icons.add, size: 16, color: AppColors.brandBlue),
                             SizedBox(width: 4),
                             Text(
-                              'Add new transaction',
+                              'Add new',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppColors.brandBlue,
@@ -158,11 +144,24 @@ class BudgetTab extends StatelessWidget {
                   if (txState.transactions.isEmpty)
                     _buildEmptyTransactions()
                   else
-                    Column(
-                      children: txState.transactions
-                          .take(5)
-                          .map((tx) => TransactionTile(transaction: tx))
-                          .toList(),
+                    // Flat task-style list, no category grouping, max 5 items
+                    ...List.generate(
+                      txState.transactions.take(5).length,
+                      (index) {
+                        final tx = txState.transactions.take(5).toList()[index];
+                        final isLast = index == (txState.transactions.take(5).length - 1);
+                        return Column(
+                          children: [
+                            TransactionTile(transaction: tx),
+                            if (!isLast)
+                              const Divider(
+                                height: 1,
+                                thickness: 0.5,
+                                color: Color(0xFFEEEEEE),
+                              ),
+                          ],
+                        );
+                      },
                     ),
 
                   if (finance.weeklyAllowance == 0)
@@ -174,13 +173,16 @@ class BudgetTab extends StatelessWidget {
                           color: const Color(0xFFFEF3C7),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                              color: const Color(0xFFF59E0B)
-                                  .withValues(alpha: 0.4)),
+                            color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
+                          ),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.info_outline,
-                                size: 16, color: Color(0xFFF59E0B)),
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Color(0xFFF59E0B),
+                            ),
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -205,22 +207,22 @@ class BudgetTab extends StatelessWidget {
   }
 
   Widget _buildEmptyTransactions() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.receipt_outlined,
-            size: 48,
+            Icons.inbox_outlined,
+            size: 18,
             color: AppColors.foreground.withValues(alpha: 0.4),
           ),
-          const Gap(12),
-          const Text(
+          const Gap(8),
+          Text(
             'No transactions yet',
             style: TextStyle(
-              fontSize: 14,
-              color: AppColors.foreground,
-              fontWeight: FontWeight.w500,
+              fontSize: 12,
+              color: AppColors.foreground.withValues(alpha: 0.6),
             ),
           ),
         ],

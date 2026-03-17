@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/finance/presentation/blocs/transaction/transaction_bloc.dart';
 
 class AddTransactionSheet extends StatefulWidget {
@@ -58,6 +58,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Handle bar
               Center(
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
@@ -70,16 +71,17 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 ),
               ),
 
+              // Header row
               Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.close, size: 24, color: AppColors.text),
+                    child: const Icon(Icons.close, size: 22, color: AppColors.text),
                   ),
                   const Expanded(
                     child: Center(
                       child: Text(
-                        'Add New Transaction',
+                        'Add Transaction',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -88,26 +90,20 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       ),
                     ),
                   ),
-
                   GestureDetector(
                     onTap: _confirm,
                     child: const Icon(
                       Icons.check,
-                      size: 24,
+                      size: 22,
                       color: AppColors.brandBlue,
                     ),
                   ),
                 ],
               ),
 
-              CustomTextField(
-                controller: _titleController,
-                hint: 'e.g. Jollibee Funds',
-                label: 'Transaction Name',
-              ),
+              const Gap(24),
 
-              const Gap(16),
-
+              // Type toggle
               Row(
                 children: [
                   _TypeButton(
@@ -118,9 +114,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       TransactionTypeChanged(true),
                     ),
                   ),
-
-                  const Gap(12),
-
+                  const Gap(10),
                   _TypeButton(
                     label: '- Expense',
                     isSelected: !isIncome,
@@ -132,11 +126,47 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 ],
               ),
 
-              CustomTextField(
-                label: 'Amount',
+              const Gap(20),
+
+              UnderlineTextField(
+                label: 'TITLE',
+                controller: _titleController,
+                hint: 'e.g. Jollibee',
+                autofocus: true,
+                textInputAction: TextInputAction.next,
+              ),
+
+              const Gap(20),
+
+              UnderlineTextField(
+                label: 'AMOUNT',
                 controller: _amountController,
-                hint: 'e.g. 500.00',
+                hint: '0.00',
                 isDecimal: true,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _confirm(),
+              ),
+
+              const Gap(28),
+
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _confirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.brandBlue,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Confirm',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                ),
               ),
             ],
           ),
@@ -174,11 +204,10 @@ class _TypeButton extends StatelessWidget {
             width: isSelected ? 1.5 : 1,
           ),
         ),
-
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: isSelected ? color : AppColors.foreground,
           ),

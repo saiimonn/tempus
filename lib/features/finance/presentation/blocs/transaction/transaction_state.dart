@@ -2,7 +2,7 @@ part of 'transaction_bloc.dart';
 
 enum TransactionStatus { initial, loading, loaded, error }
 
-class TransactionState {
+class TransactionState extends Equatable {
   final TransactionStatus status;
   final List<TransactionEntity> transactions;
   final bool selectedIsIncome;
@@ -14,6 +14,14 @@ class TransactionState {
     this.selectedIsIncome = false,
     this.errorMessage,
   });
+
+  @override
+  List<Object?> get props => [
+    status,
+    transactions,
+    selectedIsIncome,
+    errorMessage,
+  ];
 
   Map<String, List<TransactionEntity>> get groupedTransactions {
     final now = DateTime.now();
@@ -60,7 +68,7 @@ class TransactionState {
     }
     return '${months[start.month - 1]} ${start.day} - ${months[end.month - 1]}';
   }
-  
+
   TransactionState copyWith({
     TransactionStatus? status,
     List<TransactionEntity>? transactions,
