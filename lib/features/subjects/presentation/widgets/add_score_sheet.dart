@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/presentation/bloc/scores/scores_bloc.dart';
 
 class AddScoreSheet extends StatefulWidget {
@@ -45,13 +45,13 @@ class _AddScoreSheetState extends State<AddScoreSheet> {
     }
 
     context.read<ScoresBloc>().add(
-          ScoresAddRequested(
-            categoryId: widget.categoryId,
-            title: _titleController.text.trim(),
-            scoreValue: score,
-            maxScore: maxScore,
-          ),
-        );
+      ScoresAddRequested(
+        categoryId: widget.categoryId,
+        title: _titleController.text.trim(),
+        scoreValue: score,
+        maxScore: maxScore,
+      ),
+    );
 
     Navigator.of(context).pop();
   }
@@ -87,8 +87,11 @@ class _AddScoreSheetState extends State<AddScoreSheet> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child:
-                      const Icon(Icons.close, size: 22, color: AppColors.text),
+                  child: const Icon(
+                    Icons.close,
+                    size: 22,
+                    color: AppColors.text,
+                  ),
                 ),
                 const Expanded(
                   child: Center(
@@ -106,41 +109,41 @@ class _AddScoreSheetState extends State<AddScoreSheet> {
               ],
             ),
             const Gap(24),
-            CustomTextField(
+            UnderlineTextField(
+              label: "Score Title *",
+              hint: "e.g. Quiz 1",
               controller: _titleController,
-              label: 'Score Title *',
-              hint: 'e.g. Quiz 1',
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  (v == null || v.trim().isEmpty) ? "Required" : null,
             ),
             const Gap(16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: CustomTextField(
+                  child: UnderlineTextField(
+                    label: "Score *",
+                    hint: "e.g. 38",
                     controller: _scoreController,
-                    label: 'Score *',
-                    hint: 'e.g. 38',
                     isDecimal: true,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Required';
-                      if (double.tryParse(v.trim()) == null) return 'Invalid';
+                      if (v == null || v.trim().isEmpty) return "Required";
+                      if (double.tryParse(v.trim()) == null) return "Invalid";
                       return null;
                     },
                   ),
                 ),
                 const Gap(12),
                 Expanded(
-                  child: CustomTextField(
+                  child: UnderlineTextField(
+                    label: "Max Score *",
+                    hint: "e.g. 40",
                     controller: _maxScoreController,
-                    label: 'Max Score *',
-                    hint: 'e.g. 40',
                     isDecimal: true,
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (v == null || v.trim().isEmpty) return "Required";
                       final d = double.tryParse(v.trim());
-                      if (d == null || d <= 0) return 'Invalid';
+                      if (d == null || d <= 0) return "Invalid";
                       return null;
                     },
                   ),

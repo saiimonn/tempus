@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
 
 class AddCategorySheet extends StatefulWidget {
   const AddCategorySheet({super.key});
@@ -69,7 +69,11 @@ class AddCategorySheetState extends State<AddCategorySheet> {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, size: 22, color: AppColors.text),
+                  child: const Icon(
+                    Icons.close,
+                    size: 22,
+                    color: AppColors.text,
+                  ),
                 ),
 
                 const Expanded(
@@ -97,9 +101,9 @@ class AddCategorySheetState extends State<AddCategorySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomTextField(
+                      UnderlineTextField(
                         label: "Category Name *",
-                        hint: "e.g. Quizzes",
+                        hint: "e.g.k Quizzes",
                         controller: _nameController,
                         validator: (v) => v!.isEmpty ? "Required" : null,
                       ),
@@ -114,17 +118,17 @@ class AddCategorySheetState extends State<AddCategorySheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CustomTextField(
-                        controller: _weightController,
+                      UnderlineTextField(
                         label: "Grade Weight *",
                         hint: "e.g. 40%",
+                        controller: _weightController,
                         isDecimal: true,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return "Required";
                           final d = double.tryParse(v.trim());
                           if (d == null || d <= 0 || d > 100) return "1 - 100";
                           return null;
-                        }
+                        },
                       ),
                     ],
                   ),
@@ -149,8 +153,12 @@ class AddCategorySheetState extends State<AddCategorySheet> {
                 ),
                 child: const Text(
                   "Confirm",
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                )
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],

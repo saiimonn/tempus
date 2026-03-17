@@ -1,6 +1,11 @@
 part of 'task_bloc.dart';
 
-sealed class TaskState {}
+sealed class TaskState extends Equatable {
+  const TaskState();
+
+  @override
+  List<Object?> get props => [];
+}
 
 class TaskInitial extends TaskState {}
 
@@ -10,27 +15,21 @@ class TaskLoaded extends TaskState {
   final List<TaskEntity> tasks;
   final Set<String> expandedSections;
 
-  TaskLoaded(
-    this.tasks, {
-    Set<String>? expandedSections,
-  }) : expandedSections = expandedSections ??
-          {'Today', 'Upcoming', 'No Due', 'Completed'};
+  TaskLoaded(this.tasks, {Set<String>? expandedSections})
+    : expandedSections =
+          expandedSections ?? {'Today', 'Upcoming', 'No Due', 'Completed'};
 
-  List<TaskEntity> get todayTasks => tasks
-    .where((t) => !t.isComplete && t.isToday)
-    .toList();
+  List<TaskEntity> get todayTasks =>
+      tasks.where((t) => !t.isComplete && t.isToday).toList();
 
-  List<TaskEntity> get upcomingTasks => tasks
-    .where((t) => !t.isComplete && t.isUpcoming)
-    .toList();
+  List<TaskEntity> get upcomingTasks =>
+      tasks.where((t) => !t.isComplete && t.isUpcoming).toList();
 
-  List<TaskEntity> get noDueTasks => tasks
-    .where((t) => !t.isComplete && t.hasNoDue)
-    .toList();
+  List<TaskEntity> get noDueTasks =>
+      tasks.where((t) => !t.isComplete && t.hasNoDue).toList();
 
-  List<TaskEntity> get completedTasks => tasks
-    .where((t) => t.isComplete)
-    .toList();
+  List<TaskEntity> get completedTasks =>
+      tasks.where((t) => t.isComplete).toList();
 
   int get pendingCount => tasks.where((t) => !t.isComplete).length;
 
@@ -51,5 +50,8 @@ class TaskLoaded extends TaskState {
 
 class TaskError extends TaskState {
   final String message;
-  TaskError(this.message);
+  const TaskError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
