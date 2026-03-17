@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/data/data_source/scores_local_data_source.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_detail_local_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/scores_repository_impl.dart';
@@ -85,12 +85,7 @@ class _SubjectCard extends StatelessWidget {
         side: BorderSide(color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
       child: Padding(
-        padding: const EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: 16,
-          bottom: 8,
-        ),
+        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
         child: Column(
           children: [
             Row(
@@ -327,16 +322,17 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                CustomTextField(
-                  label: 'Subject Name',
-                  hint: 'e.g. Data Structures and Algorithms',
+                UnderlineTextField(
+                  label: "Subject Name",
+                  hint: "e.g. Data Structures and Algorithms",
                   controller: _nameController,
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                  validator: (v) => 
+                    v == null || v.isEmpty ? "Required" : null,
                 ),
                 const SizedBox(height: 16),
-                CustomTextField(
-                  label: 'Instructor',
-                  hint: 'e.g. Christine Pena',
+                UnderlineTextField(
+                  label: "Instructor",
+                  hint: "e.g. Christine Pena",
                   controller: _profController,
                 ),
                 const SizedBox(height: 16),
@@ -345,20 +341,20 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                   children: [
                     Expanded(
                       flex: 2,
-                      child: CustomTextField(
-                        label: 'Subject Code',
-                        hint: 'e.g. CIS 2101',
+                      child: UnderlineTextField(
+                        label: "Subject Code",
+                        hint: "e.g. CIS 2101",
                         controller: _codeController,
                         validator: (v) =>
-                            v == null || v.isEmpty ? 'Required' : null,
+                            v == null || v.isEmpty ? "Required" : null,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       flex: 1,
-                      child: CustomTextField(
-                        label: 'Units',
-                        hint: 'e.g. 3',
+                      child: UnderlineTextField(
+                        label: "Units",
+                        hint: "e.g. 3",
                         controller: _unitsController,
                         validator: (v) {
                           if (v == null || v.isEmpty) {

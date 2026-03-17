@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/core/widgets/custom_text_field.dart';
+
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_local_data_source.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
@@ -75,10 +76,10 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     ),
                   ),
                 ),
-                CustomTextField(
-                  label: 'Task',
+                UnderlineTextField(
+                  label: "Task",
+                  hint: "e.g. Submit Data Structure",
                   controller: _titleController,
-                  hint: 'e.g. Submit Data Structure',
                   autofocus: true,
                   onFieldSubmitted: (_) => _submit(context, formState),
                 ),

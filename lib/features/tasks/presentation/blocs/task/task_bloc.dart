@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/domain/use_cases/add_task.dart';

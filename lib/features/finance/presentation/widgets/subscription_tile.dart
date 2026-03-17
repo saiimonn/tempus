@@ -9,19 +9,6 @@ class SubscriptionTile extends StatelessWidget {
 
   const SubscriptionTile({super.key, required this.subscription});
 
-  Color get _iconColor {
-    final hue = subscription.title.hashCode.abs() % 360;
-    return HSVColor.fromAHSV(1, hue.toDouble(), 0.55, 0.80).toColor();
-  }
-
-  String get _initials {
-    final words = subscription.title.trim().split(' ');
-    if (words.length >= 2) return '${words[0][0]}${words[1][0]}'.toUpperCase();
-    return subscription.title
-        .substring(0, subscription.title.length.clamp(0, 2))
-        .toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -49,7 +36,7 @@ class SubscriptionTile extends StatelessWidget {
       },
       
       child: Container(
-        margin: const EdgeInsets.only(bottom: 4),
+        margin: const EdgeInsets.only(bottom: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -57,8 +44,8 @@ class SubscriptionTile extends StatelessWidget {
             Text(
               subscription.title,
               style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
                 color: AppColors.text,
               ),
             ),
