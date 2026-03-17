@@ -42,7 +42,7 @@ class BudgetRing extends StatelessWidget {
                 painter: _RingPainter(
                   progress: progress,
                   color: ringColor,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: Colors.grey.shade300,
                 ),
               ),
               Column(

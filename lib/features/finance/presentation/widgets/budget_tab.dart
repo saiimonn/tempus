@@ -57,13 +57,6 @@ class BudgetTab extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.inputFill.withValues(alpha: 0.5),
-                      ),
-                    ),
                     child: BudgetRing(
                       finance: finance,
                       onEditBudget: () =>
@@ -78,13 +71,6 @@ class BudgetTab extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.inputFill.withValues(alpha: 0.5),
-                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
