@@ -40,169 +40,186 @@ class BudgetTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FinanceBloc, FinanceState>(
-      builder: (context, financeState) {
-        if (financeState.finance == null) return const SizedBox.shrink();
+    // Whenever the transaction list mutates (add or delete), the DB
+    // total_amount has already been updated by TransactionRemoteDataSource.
+    // We fire FinanceLoadRequested so the budget ring and "spent this week"
+    // reflect the new balance without a hot restart.
+    return BlocListener<TransactionBloc, TransactionState>(
+      listenWhen: (previous, current) =>
+          previous.transactions != current.transactions,
+      listener: (context, _) {
+        context.read<FinanceBloc>().add(FinanceLoadRequested());
+      },
+      child: BlocBuilder<FinanceBloc, FinanceState>(
+        builder: (context, financeState) {
+          if (financeState.finance == null) return const SizedBox.shrink();
 
-        final finance = financeState.finance!;
+          final finance = financeState.finance!;
 
-        return BlocBuilder<TransactionBloc, TransactionState>(
-          builder: (context, txState) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Budget ring card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: BudgetRing(
-                      finance: finance,
-                      onEditBudget: () =>
-                          _showBudgetSheet(context, finance.weeklyAllowance),
+          return BlocBuilder<TransactionBloc, TransactionState>(
+            builder: (context, txState) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Budget ring card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: BudgetRing(
+                        finance: finance,
+                        onEditBudget: () =>
+                            _showBudgetSheet(context, finance.weeklyAllowance),
+                      ),
                     ),
-                  ),
 
-                  const Gap(20),
+                    const Gap(20),
 
-                  // Spent this week row
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                    // Spent this week row
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Row(
+                            children: [
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 18,
+                                color: AppColors.foreground,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                'Spent this week',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.text,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '₱${finance.spentThisWeek < 0 ? 0 : finance.spentThisWeek.toStringAsFixed(0)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.text,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
+
+                    const Gap(20),
+
+                    // Recent Transactions header
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.receipt_long_outlined,
-                              size: 18,
-                              color: AppColors.foreground,
-                            ),
-                            const SizedBox(width: 10),
-                            const Text(
-                              'Spent this week',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.text,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '₱${finance.spentThisWeek < 0 ? 0 : finance.spentThisWeek.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        const Text(
+                          'Recent Transactions',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                             color: AppColors.text,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => _showAddTransactionSheet(context),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.add,
+                                size: 16,
+                                color: AppColors.brandBlue,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Add new',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.brandBlue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
 
-                  const Gap(20),
+                    const Gap(12),
 
-                  // Recent Transactions header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Recent Transactions',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.text,
-                        ),
+                    if (txState.transactions.isEmpty)
+                      _buildEmptyTransactions()
+                    else
+                      ...List.generate(
+                        txState.transactions.take(5).length,
+                        (index) {
+                          final tx =
+                              txState.transactions.take(5).toList()[index];
+                          final isLast = index ==
+                              (txState.transactions.take(5).length - 1);
+                          return Column(
+                            children: [
+                              TransactionTile(transaction: tx),
+                              if (!isLast)
+                                const Divider(
+                                  height: 1,
+                                  thickness: 0.5,
+                                  color: Color(0xFFEEEEEE),
+                                ),
+                            ],
+                          );
+                        },
                       ),
-                      GestureDetector(
-                        onTap: () => _showAddTransactionSheet(context),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.add, size: 16, color: AppColors.brandBlue),
-                            SizedBox(width: 4),
-                            Text(
-                              'Add new',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.brandBlue,
-                                fontWeight: FontWeight.w500,
-                              ),
+
+                    if (finance.weeklyAllowance == 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFF59E0B)
+                                  .withValues(alpha: 0.4),
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const Gap(12),
-
-                  if (txState.transactions.isEmpty)
-                    _buildEmptyTransactions()
-                  else
-                    // Flat task-style list, no category grouping, max 5 items
-                    ...List.generate(
-                      txState.transactions.take(5).length,
-                      (index) {
-                        final tx = txState.transactions.take(5).toList()[index];
-                        final isLast = index == (txState.transactions.take(5).length - 1);
-                        return Column(
-                          children: [
-                            TransactionTile(transaction: tx),
-                            if (!isLast)
-                              const Divider(
-                                height: 1,
-                                thickness: 0.5,
-                                color: Color(0xFFEEEEEE),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-
-                  if (finance.weeklyAllowance == 0)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEF3C7),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.4),
                           ),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 16,
-                              color: Color(0xFFF59E0B),
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Budget not set yet. Tap the edit icon to set your budget.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF92400E),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 16,
+                                color: Color(0xFFF59E0B),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Budget not set yet. Tap the edit icon to set your budget.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF92400E),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            );
-          },
-        );
-      },
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
