@@ -8,8 +8,18 @@ class TaskRemoteDataSource {
 
   String get _userId => _client.auth.currentUser!.id;
 
+  // Supabase returns TIME columns as "HH:mm:ss" — trim to "HH:mm"
   String? _trimTime(String? raw) =>
       raw != null && raw.length >= 5 ? raw.substring(0, 5) : raw;
+
+  // Supabase returns DATE columns as "YYYY-MM-DD".
+  // DateTime.parse("YYYY-MM-DD") produces a UTC midnight DateTime.
+  // Converting to local ensures isToday / isUpcoming comparisons are correct
+  // regardless of the user's timezone offset.
+  DateTime? _parseDate(String? raw) {
+    if (raw == null) return null;
+    return DateTime.parse(raw).toLocal();
+  }
 
   TaskModel _rowToModel(Map<String, dynamic> row) {
     final subject = row['subject'] as Map<String, dynamic>?;
@@ -52,19 +62,17 @@ class TaskRemoteDataSource {
   }
 
   Future<TaskModel> addTask(TaskModel task) async {
-    final payload = <String, dynamic>{
-      'user_id': _userId,
-      'title': task.title,
-      'status': task.status,
-      if (task.subId != null) 'sub_id': task.subId,
-      if (task.dueDate != null)
-        'due_date': task.dueDate!.toIso8601String().substring(0, 10),
-      if (task.dueTime != null) 'due_time': task.dueTime,
-    };
-
     final data = await _client
         .from('tasks')
-        .insert(payload)
+        .insert({
+          'user_id': _userId,
+          'title': task.title,
+          'status': task.status,
+          if (task.subId != null) 'sub_id': task.subId,
+          if (task.dueDate != null)
+            'due_date': task.dueDate!.toIso8601String().substring(0, 10),
+          if (task.dueTime != null) 'due_time': task.dueTime,
+        })
         .select(_taskSelect)
         .single();
 
@@ -72,17 +80,16 @@ class TaskRemoteDataSource {
   }
 
   Future<TaskModel> updateTask(TaskModel task) async {
-    final payload = <String, dynamic>{
-      'title': task.title,
-      'status': task.status,
-      'sub_id': task.subId,
-      'due_date': task.dueDate?.toIso8601String().substring(0, 10),
-      'due_time': task.dueTime,
-    };
-
     final data = await _client
         .from('tasks')
-        .update(payload)
+        .update({
+          'title': task.title,
+          'status': task.status,
+          'sub_id': task.subId,
+          'due_date': task.dueDate?.toIso8601String().substring(0, 10),
+
+          'due_time': task.dueTime,
+        })
         .eq('id', task.id)
         .eq('user_id', _userId)
         .select(_taskSelect)

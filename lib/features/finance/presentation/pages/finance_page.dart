@@ -35,7 +35,7 @@ class FinancePage extends StatelessWidget {
     final financeRepo =
         FinanceRepositoryImpl(FinanceRemoteDataSource(client));
     final transactionRepo =
-        TransactionRepositoryImpl(TransactionRemoteDataSource(client));
+        TransactionRepositoryImpl(TransactionsRemoteDataSource(client));
     final subscriptionRepo =
         SubscriptionRepositoryImpl(SubscriptionRemoteDataSource(client));
 

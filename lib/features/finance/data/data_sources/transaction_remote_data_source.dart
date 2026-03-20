@@ -1,10 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tempus/features/finance/data/models/transaction_model.dart';
 
-class TransactionRemoteDataSource {
+/// `transactions.amount` is stored as a signed NUMERIC:
+///   positive  → income  (adds to remaining balance)
+///   negative  → expense (subtracts from remaining balance)
+///
+/// `finances.total_amount` = remaining balance.
+///   income  → total_amount increases
+///   expense → total_amount decreases
+///
+/// [TransactionModel] carries `amount` as an absolute positive double and
+/// uses `isIncome` (bool) for direction. This class converts on read/write.
+class TransactionsRemoteDataSource {
   final SupabaseClient _client;
 
-  const TransactionRemoteDataSource(this._client);
+  const TransactionsRemoteDataSource(this._client);
 
   String get _userId => _client.auth.currentUser!.id;
 
@@ -50,6 +60,8 @@ class TransactionRemoteDataSource {
   }) async {
     final finances = await _getFinancesRow();
 
+    // Income is positive (increases remaining balance).
+    // Expense is negative (decreases remaining balance).
     final signedAmount = isIncome ? amount.abs() : -amount.abs();
 
     final data = await _client
@@ -62,18 +74,19 @@ class TransactionRemoteDataSource {
         .select('id, title, amount, created_at')
         .single();
 
+    // Update running balance: income adds, expense subtracts
     await _client
         .from('finances')
         .update({'total_amount': finances.totalAmount + signedAmount})
         .eq('id', finances.id);
 
-    final storedAmount = (data['amount'] as num).toDouble();
+    final stored = (data['amount'] as num).toDouble();
     return TransactionModel.fromMap({
       'id': data['id'],
       'title': data['title'],
-      'amount': storedAmount.abs(),
+      'amount': stored.abs(),
       'created_at': data['created_at'],
-      'is_income': storedAmount >= 0,
+      'is_income': stored >= 0,
     });
   }
 
@@ -87,11 +100,13 @@ class TransactionRemoteDataSource {
     final signedAmount = (txRow['amount'] as num).toDouble();
     final financesId = txRow['finances_id'] as int;
 
+    // Soft delete
     await _client
         .from('transactions')
         .update({'is_deleted': true})
         .eq('id', id);
 
+    // Reverse the transaction's effect on the running balance
     final financesRow = await _client
         .from('finances')
         .select('total_amount')

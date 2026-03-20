@@ -4,12 +4,12 @@ import 'package:tempus/features/finance/domain/entities/transaction_entity.dart'
 import 'package:tempus/features/finance/domain/repositories/transaction_repository.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
-  final TransactionRemoteDataSource dataSource;
+  final TransactionsRemoteDataSource dataSource;
 
   const TransactionRepositoryImpl(this.dataSource);
 
   factory TransactionRepositoryImpl.create() => TransactionRepositoryImpl(
-    TransactionRemoteDataSource(Supabase.instance.client),
+    TransactionsRemoteDataSource(Supabase.instance.client),
   );
 
   @override
