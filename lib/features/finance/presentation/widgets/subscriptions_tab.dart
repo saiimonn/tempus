@@ -88,6 +88,7 @@ class SubscriptionsTab extends StatelessWidget {
               bottom: 20,
               right: 20,
               child: FloatingActionButton(
+                heroTag: 'subscriptions_fab',
                 onPressed: () => _showAddSubscriptionSheet(context),
                 backgroundColor: AppColors.brandBlue,
                 elevation: 4,

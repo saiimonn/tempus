@@ -91,6 +91,7 @@ class TransactionsTab extends StatelessWidget {
               bottom: 20,
               right: 20,
               child: FloatingActionButton(
+                heroTag: 'transactions_fab',
                 onPressed: () => _showAddTransactionSheet(context),
                 backgroundColor: AppColors.brandBlue,
                 elevation: 4,

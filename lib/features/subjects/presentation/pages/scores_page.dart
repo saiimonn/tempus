@@ -276,6 +276,7 @@ class _AddScoreFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
+      heroTag: 'scores_fab',
       onPressed: isLoading ? null : () => _handleTap(context),
       backgroundColor: AppColors.brandBlue,
       elevation: 4,
