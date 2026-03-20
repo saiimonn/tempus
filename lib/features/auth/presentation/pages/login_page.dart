@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 import 'package:tempus/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:tempus/features/home/presentation/blocs/home_bloc.dart';
 import 'package:tempus/features/home/presentation/pages/home_page.dart';
+import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'register_page.dart';
 import 'package:tempus/core/widgets/auth_background.dart';
@@ -44,7 +46,19 @@ class _LoginPageState extends State<LoginPage> {
 
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
+              MaterialPageRoute(
+                builder: (_) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<HomeBloc>(
+                      create: (_) => HomeBloc.create()..add(HomeLoadRequested()),
+                    ),
+                    BlocProvider<ProfileBloc>(
+                      create: (_) => ProfileBloc.create()..add(ProfileLoadRequested()),
+                    ),
+                  ],
+                  child: const HomePage(),
+                ),
+              ),
             );
           }
         },

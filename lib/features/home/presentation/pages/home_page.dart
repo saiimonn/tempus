@@ -14,6 +14,8 @@ import 'package:tempus/features/home/presentation/blocs/home_bloc.dart';
 import 'package:tempus/features/home/presentation/widgets/home_budget_card.dart';
 import 'package:tempus/features/home/presentation/widgets/home_schedule_card.dart';
 import 'package:tempus/features/home/presentation/widgets/home_task_card.dart';
+import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:tempus/features/profile/presentation/pages/profile_page.dart';
 import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
@@ -136,7 +138,18 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Account',
-            onPressed: () {},
+            onPressed: () {
+              final profileBloc = BlocProvider.of<ProfileBloc>(context);
+
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: profileBloc,
+                    child: const ProfilePage(),
+                  ),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.logout),

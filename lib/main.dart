@@ -11,6 +11,7 @@ import 'package:tempus/features/onboarding/domain/use_cases/check_onboarding_com
 import 'package:tempus/features/onboarding/domain/use_cases/mark_onboarding_complete.dart';
 import 'package:tempus/features/onboarding/presentation/bloc/onboarding_bloc.dart';
 import 'package:tempus/features/onboarding/presentation/pages/onboarding.dart';
+import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,8 +58,17 @@ class MyApp extends StatelessWidget {
         child: const Onboarding(),
       );
     } else if (session != null) {
-      home = BlocProvider(
-        create: (_) => HomeBloc.create()..add(HomeLoadRequested()),
+      home = MultiBlocProvider(
+        providers: [
+          BlocProvider<HomeBloc>(
+            create: (_) => HomeBloc.create()..add(HomeLoadRequested()),
+          ),
+          
+          BlocProvider<ProfileBloc>(
+            create: (_) => ProfileBloc.create()..add(ProfileLoadRequested())
+          ),
+        ],
+
         child: const HomePage(),
       );
     } else {

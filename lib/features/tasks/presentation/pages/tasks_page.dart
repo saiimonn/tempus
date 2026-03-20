@@ -117,6 +117,7 @@ class _TasksPageState extends State<TasksPage> {
                   bottom: 20,
                   right: 20,
                   child: FloatingActionButton(
+                    heroTag: 'tasks_fab',
                     onPressed: () => _showAddTaskSheet(context),
                     backgroundColor: AppColors.brandBlue,
                     elevation: 4,
