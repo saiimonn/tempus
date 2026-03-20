@@ -7,6 +7,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
+import 'package:tempus/features/finance/data/data_sources/finance_remote_data_source.dart';
+import 'package:tempus/features/finance/data/repositories/finance_repository_impl.dart';
 import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/finance/presentation/pages/finance_page.dart';
 import 'package:tempus/features/home/domain/entities/home_summary_entity.dart';
@@ -30,7 +32,7 @@ import 'package:tempus/features/subjects/domain/use_cases/add_subject.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_subjects.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/pages/subjects_page.dart';
-import 'package:tempus/features/tasks/data/data_sources/task_local_data_source.dart';
+import 'package:tempus/features/tasks/data/data_sources/task_remote_data_source.dart';
 import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/domain/use_cases/add_task.dart';
@@ -43,7 +45,8 @@ import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
 final _fakeSummary = HomeSummaryEntity(
   todayTasks: List.generate(
     3,
-    (i) => TaskEntity(id: i, title: 'Loading task title here', status: 'pending'),
+    (i) => TaskEntity(
+        id: i, title: 'Loading task title here', status: 'pending'),
   ),
   todaySchedule: List.generate(
     3,
@@ -57,7 +60,8 @@ final _fakeSummary = HomeSummaryEntity(
       endTime: '10:00',
     ),
   ),
-  finance: const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
+  finance:
+      const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
 );
 
 class HomePage extends StatefulWidget {
@@ -101,10 +105,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
+    final fullName =
+        user?.userMetadata?['full_name'] as String? ?? 'User';
     final String name = fullName.split(' ').first;
     final DateTime now = DateTime.now();
     final date = DateFormat.yMMMMd('en_US').format(now);
+
+    final client = Supabase.instance.client;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -140,7 +147,6 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Account',
             onPressed: () {
               final profileBloc = BlocProvider.of<ProfileBloc>(context);
-
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
@@ -167,7 +173,8 @@ class _HomePageState extends State<HomePage> {
           ),
           BlocProvider<ScheduleBloc>(
             create: (_) {
-              final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
+              final repo =
+                  ScheduleRepositoryImpl(ScheduleLocalDataSource());
               return ScheduleBloc(
                 loadSchedule: LoadSchedule(repo),
                 addScheduleEntry: AddScheduleEntry(repo),
@@ -176,9 +183,11 @@ class _HomePageState extends State<HomePage> {
             },
             child: const SchedulePage(),
           ),
+          // Tasks — remote
           BlocProvider<TaskBloc>(
             create: (_) {
-              final repo = TaskRepositoryImpl(TaskLocalDataSource());
+              final repo =
+                  TaskRepositoryImpl(TaskRemoteDataSource(client));
               return TaskBloc(
                 getTasks: GetTasks(repo),
                 addTask: AddTask(repo),
@@ -188,13 +197,15 @@ class _HomePageState extends State<HomePage> {
             },
             child: const TasksPage(),
           ),
+          // Finance — all three blocs remote
           MultiBlocProvider(
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
           BlocProvider<SubjectBloc>(
             create: (_) {
-              final repo = SubjectRepositoryImpl(SubjectLocalDataSource());
+              final repo =
+                  SubjectRepositoryImpl(SubjectLocalDataSource());
               return SubjectBloc(
                 getSubjects: GetSubjects(repo),
                 addSubject: AddSubject(repo),
@@ -228,7 +239,8 @@ class _HomeContent extends StatelessWidget {
         if (state.status == HomeStatus.error) {
           return _ErrorContent(
             message: state.errorMessage ?? 'Something went wrong',
-            onRetry: () => context.read<HomeBloc>().add(HomeLoadRequested()),
+            onRetry: () =>
+                context.read<HomeBloc>().add(HomeLoadRequested()),
           );
         }
 
@@ -240,7 +252,8 @@ class _HomeContent extends StatelessWidget {
           child: _LoadedContent(
             name: firstName,
             state: isLoading
-                ? HomeState(status: HomeStatus.loaded, summary: _fakeSummary)
+                ? HomeState(
+                    status: HomeStatus.loaded, summary: _fakeSummary)
                 : state,
             onNavigateToTasks: () => onNavigateToTab(2),
           ),
@@ -273,7 +286,8 @@ class _ErrorContent extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.destructive, fontSize: 16),
+              style: const TextStyle(
+                  color: AppColors.destructive, fontSize: 16),
             ),
             const Gap(24),
             ElevatedButton(

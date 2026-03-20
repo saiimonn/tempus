@@ -1,17 +1,23 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tempus/features/finance/data/data_sources/transaction_remote_data_source.dart';
 import 'package:tempus/features/finance/domain/entities/transaction_entity.dart';
 import 'package:tempus/features/finance/domain/repositories/transaction_repository.dart';
-import 'package:tempus/features/finance/data/data_sources/transaction_local_data_source.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
-  final TransactionsLocalDataSource dataSource;
+  final TransactionRemoteDataSource dataSource;
 
   const TransactionRepositoryImpl(this.dataSource);
 
-  @override
-  Future <List<TransactionEntity>> getTransactions() => dataSource.getTransactions();
+  factory TransactionRepositoryImpl.create() => TransactionRepositoryImpl(
+    TransactionRemoteDataSource(Supabase.instance.client),
+  );
 
   @override
-  Future <TransactionEntity> addTransaction({
+  Future<List<TransactionEntity>> getTransactions() =>
+      dataSource.getTransactions();
+
+  @override
+  Future<TransactionEntity> addTransaction({
     required String title,
     required double amount,
     required bool isIncome,
@@ -22,5 +28,5 @@ class TransactionRepositoryImpl implements TransactionRepository {
   );
 
   @override
-  Future <void> deleteTransaction(int id) => dataSource.deleteTransaction(id);
+  Future<void> deleteTransaction(int id) => dataSource.deleteTransaction(id);
 }
