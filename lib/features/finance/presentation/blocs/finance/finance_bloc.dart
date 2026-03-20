@@ -14,9 +14,9 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   FinanceBloc({
     required GetFinance getFinance,
     required UpdateBudget updateBudget,
-  }) : _getFinance = getFinance,
-       _updateBudget = updateBudget,
-       super(const FinanceState()) {
+  })  : _getFinance = getFinance,
+        _updateBudget = updateBudget,
+        super(const FinanceState()) {
     on<FinanceLoadRequested>(_onLoad);
     on<FinanceBudgetUpdateRequested>(_onUpdateBudget);
     on<FinanceTabChanged>(_onTabChanged);
@@ -29,7 +29,8 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   ) async {
     emit(state.copyWith(status: FinanceStatus.loading));
 
-    await Future.delayed(const Duration(seconds: 3));
+    // NOTE: the artificial Future.delayed that was here has been removed.
+    // Skeletonizer shows while the real network request is in flight.
 
     try {
       final finance = await _getFinance();

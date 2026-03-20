@@ -15,13 +15,15 @@ class TransactionState extends Equatable {
     this.errorMessage,
   });
 
+  // Props were already declared correctly in the original — keeping as-is
+  // but making explicit so mutations trigger BlocListener.listenWhen.
   @override
   List<Object?> get props => [
-    status,
-    transactions,
-    selectedIsIncome,
-    errorMessage,
-  ];
+        status,
+        transactions,
+        selectedIsIncome,
+        errorMessage,
+      ];
 
   Map<String, List<TransactionEntity>> get groupedTransactions {
     final now = DateTime.now();
@@ -49,18 +51,8 @@ class TransactionState extends Equatable {
 
   String _formatWeekRange(DateTime start, DateTime end) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
 
     if (start.month == end.month) {

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tempus/core/theme/app_colors.dart';
-import 'package:tempus/features/finance/data/data_sources/finance_local_data_source.dart';
-import 'package:tempus/features/finance/data/data_sources/subscription_local_data_source.dart';
-import 'package:tempus/features/finance/data/data_sources/transaction_local_data_source.dart';
+import 'package:tempus/features/finance/data/data_sources/finance_remote_data_source.dart';
+import 'package:tempus/features/finance/data/data_sources/subscription_remote_data_source.dart';
+import 'package:tempus/features/finance/data/data_sources/transaction_remote_data_source.dart';
 import 'package:tempus/features/finance/data/repositories/finance_repository_impl.dart';
 import 'package:tempus/features/finance/data/repositories/subscription_repository_impl.dart';
 import 'package:tempus/features/finance/data/repositories/transaction_repository_impl.dart';
@@ -29,14 +30,14 @@ class FinancePage extends StatelessWidget {
   const FinancePage({super.key});
 
   static List<BlocProvider> createProviders() {
-    final financeDataSource = FinanceLocalDataSource();
-    final financeRepo = FinanceRepositoryImpl(financeDataSource);
+    final client = Supabase.instance.client;
 
-    final transactionDataSource = TransactionsLocalDataSource();
-    final transactionRepo = TransactionRepositoryImpl(transactionDataSource);
-
-    final subscriptionDataSource = SubscriptionsLocalDataSource();
-    final subscriptionRepo = SubscriptionRepositoryImpl(subscriptionDataSource);
+    final financeRepo =
+        FinanceRepositoryImpl(FinanceRemoteDataSource(client));
+    final transactionRepo =
+        TransactionRepositoryImpl(TransactionsRemoteDataSource(client));
+    final subscriptionRepo =
+        SubscriptionRepositoryImpl(SubscriptionRemoteDataSource(client));
 
     return [
       BlocProvider<FinanceBloc>(
@@ -45,7 +46,6 @@ class FinancePage extends StatelessWidget {
           updateBudget: UpdateBudget(financeRepo),
         )..add(FinanceLoadRequested()),
       ),
-
       BlocProvider<TransactionBloc>(
         create: (_) => TransactionBloc(
           getTransactions: GetTransactions(transactionRepo),
@@ -53,7 +53,6 @@ class FinancePage extends StatelessWidget {
           deleteTransaction: DeleteTransaction(transactionRepo),
         )..add(TransactionLoadRequested()),
       ),
-
       BlocProvider<SubscriptionBloc>(
         create: (_) => SubscriptionBloc(
           getSubscriptions: GetSubscriptions(subscriptionRepo),
@@ -68,19 +67,14 @@ class FinancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
       builder: (context, state) {
-        // 1. Define if we are in a loading state
-        print('curr ui status: ${state.status}');
         final bool isLoading = state.status == FinanceStatus.loading;
 
-        // 2. Determine what data to show.
-        // If loading, we provide a "Mock" entity so Skeletonizer has something to draw.
         final displayState = isLoading
             ? state.copyWith(
-                status: FinanceStatus
-                    .loaded, // Set to loaded so _FinanceContent renders items
+                status: FinanceStatus.loaded,
                 finance: const FinanceEntity(
                   id: 0,
-                  weeklyAllowance: 3500, // Provides width for the skeleton bars
+                  weeklyAllowance: 3500,
                   totalAmount: 2100,
                 ),
               )
@@ -121,16 +115,15 @@ class _FinanceContent extends StatelessWidget {
                     color: AppColors.brandBlue,
                   ),
                 ),
-
                 const Gap(12),
-
                 Row(
                   children: List.generate(tabs.length, (i) {
                     final isSelected = state.selectedTabIndex == i;
 
                     return GestureDetector(
-                      onTap: () =>
-                          context.read<FinanceBloc>().add(FinanceTabChanged(i)),
+                      onTap: () => context
+                          .read<FinanceBloc>()
+                          .add(FinanceTabChanged(i)),
                       child: Container(
                         margin: const EdgeInsets.only(right: 20),
                         padding: const EdgeInsets.only(bottom: 10),
@@ -144,7 +137,6 @@ class _FinanceContent extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         child: Text(
                           tabs[i],
                           style: TextStyle(
@@ -164,7 +156,6 @@ class _FinanceContent extends StatelessWidget {
               ],
             ),
           ),
-
           Expanded(
             child: IndexedStack(
               index: state.selectedTabIndex,

@@ -16,8 +16,13 @@ class TaskLoaded extends TaskState {
   final Set<String> expandedSections;
 
   TaskLoaded(this.tasks, {Set<String>? expandedSections})
-    : expandedSections =
-          expandedSections ?? {'Today', 'Upcoming', 'No Due', 'Completed'};
+      : expandedSections =
+            expandedSections ?? {'Today', 'Upcoming', 'No Due', 'Completed'};
+
+  // Without this override every TaskLoaded emission looks identical to
+  // Equatable, so BlocBuilder never triggers a rebuild after mutations.
+  @override
+  List<Object?> get props => [tasks, expandedSections];
 
   List<TaskEntity> get todayTasks =>
       tasks.where((t) => !t.isComplete && t.isToday).toList();
@@ -33,9 +38,8 @@ class TaskLoaded extends TaskState {
 
   int get pendingCount => tasks.where((t) => !t.isComplete).length;
 
-  bool isSectionExpanded(String sectionName) {
-    return expandedSections.contains(sectionName);
-  }
+  bool isSectionExpanded(String sectionName) =>
+      expandedSections.contains(sectionName);
 
   TaskLoaded copyWith({
     List<TaskEntity>? tasks,

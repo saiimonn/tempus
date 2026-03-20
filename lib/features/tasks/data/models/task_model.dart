@@ -13,12 +13,18 @@ class TaskModel extends TaskEntity {
   });
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
+    // Supabase returns DATE as "YYYY-MM-DD". DateTime.parse produces UTC
+    // midnight which can shift the calendar day for users in UTC+ zones.
+    // .toLocal() ensures isToday / isUpcoming comparisons are always correct.
+    DateTime? parsedDate;
+    if (map['due_date'] != null) {
+      parsedDate = DateTime.parse(map['due_date'] as String).toLocal();
+    }
+
     return TaskModel(
       id: map['id'] as int,
       title: map['title'] as String,
-      dueDate: map['due_date'] != null
-        ? DateTime.parse(map['due_date'] as String)
-        : null,
+      dueDate: parsedDate,
       dueTime: map['due_time'] as String?,
       status: map['status'] as String? ?? 'pending',
       subId: map['sub_id'] as int?,
