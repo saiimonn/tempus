@@ -34,7 +34,6 @@ class SubjectLocalDataSource {
       code: sub.code,
       instructor: sub.instructor,
       units: sub.units,
-      grades: sub.grades,
     );
   }
 }

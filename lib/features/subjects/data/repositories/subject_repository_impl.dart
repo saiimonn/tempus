@@ -1,15 +1,19 @@
-import 'package:tempus/features/subjects/data/data_source/subject_local_data_source.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tempus/features/subjects/data/data_source/subject_remote_data_source.dart';
 import 'package:tempus/features/subjects/data/models/subject_model.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/domain/repositories/subject_repository.dart';
 
 class SubjectRepositoryImpl implements SubjectRepository {
-  final SubjectLocalDataSource dataSource;
+  final SubjectRemoteDataSource dataSource;
 
   const SubjectRepositoryImpl(this.dataSource);
 
+  factory SubjectRepositoryImpl.create() =>
+      SubjectRepositoryImpl(SubjectRemoteDataSource(Supabase.instance.client));
+
   @override
-  Future <List<SubjectEntity>> getSubjects() => dataSource.getSubjects();
+  Future<List<SubjectEntity>> getSubjects() => dataSource.getSubjects();
 
   @override
   Future<SubjectEntity> addSubject(SubjectEntity subject) {
@@ -19,7 +23,6 @@ class SubjectRepositoryImpl implements SubjectRepository {
       code: subject.code,
       instructor: subject.instructor,
       units: subject.units,
-      grades: subject.grades,
     );
     return dataSource.addSubject(model);
   }

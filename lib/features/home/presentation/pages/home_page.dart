@@ -7,8 +7,6 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/bottom_navigation_bar.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
-import 'package:tempus/features/finance/data/data_sources/finance_remote_data_source.dart';
-import 'package:tempus/features/finance/data/repositories/finance_repository_impl.dart';
 import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/finance/presentation/pages/finance_page.dart';
 import 'package:tempus/features/home/domain/entities/home_summary_entity.dart';
@@ -26,7 +24,7 @@ import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.
 import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/pages/schedule_page.dart';
-import 'package:tempus/features/subjects/data/data_source/subject_local_data_source.dart';
+import 'package:tempus/features/subjects/data/data_source/subject_remote_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_subject.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_subjects.dart';
@@ -60,8 +58,7 @@ final _fakeSummary = HomeSummaryEntity(
       endTime: '10:00',
     ),
   ),
-  finance:
-      const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
+  finance: const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
 );
 
 class HomePage extends StatefulWidget {
@@ -105,8 +102,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final fullName =
-        user?.userMetadata?['full_name'] as String? ?? 'User';
+    final fullName = user?.userMetadata?['full_name'] as String? ?? 'User';
     final String name = fullName.split(' ').first;
     final DateTime now = DateTime.now();
     final date = DateFormat.yMMMMd('en_US').format(now);
@@ -173,8 +169,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BlocProvider<ScheduleBloc>(
             create: (_) {
-              final repo =
-                  ScheduleRepositoryImpl(ScheduleLocalDataSource());
+              final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
               return ScheduleBloc(
                 loadSchedule: LoadSchedule(repo),
                 addScheduleEntry: AddScheduleEntry(repo),
@@ -186,8 +181,7 @@ class _HomePageState extends State<HomePage> {
           // Tasks — remote
           BlocProvider<TaskBloc>(
             create: (_) {
-              final repo =
-                  TaskRepositoryImpl(TaskRemoteDataSource(client));
+              final repo = TaskRepositoryImpl(TaskRemoteDataSource(client));
               return TaskBloc(
                 getTasks: GetTasks(repo),
                 addTask: AddTask(repo),
@@ -202,10 +196,12 @@ class _HomePageState extends State<HomePage> {
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
+          // Subjects — remote
           BlocProvider<SubjectBloc>(
             create: (_) {
-              final repo =
-                  SubjectRepositoryImpl(SubjectLocalDataSource());
+              final repo = SubjectRepositoryImpl(
+                SubjectRemoteDataSource(client),
+              );
               return SubjectBloc(
                 getSubjects: GetSubjects(repo),
                 addSubject: AddSubject(repo),
@@ -252,8 +248,7 @@ class _HomeContent extends StatelessWidget {
           child: _LoadedContent(
             name: firstName,
             state: isLoading
-                ? HomeState(
-                    status: HomeStatus.loaded, summary: _fakeSummary)
+                ? HomeState(status: HomeStatus.loaded, summary: _fakeSummary)
                 : state,
             onNavigateToTasks: () => onNavigateToTab(2),
           ),

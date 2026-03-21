@@ -1,23 +1,27 @@
-import 'package:tempus/features/subjects/data/data_source/scores_local_data_source.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tempus/features/subjects/data/data_source/scores_remote_data_source.dart';
 import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/scores_entity.dart';
 import 'package:tempus/features/subjects/domain/repositories/scores_repository.dart';
 
 class ScoresRepositoryImpl implements ScoresRepository {
-  final ScoresLocalDataSource dataSource;
+  final ScoresRemoteDataSource dataSource;
 
   const ScoresRepositoryImpl(this.dataSource);
 
-  @override
-  Future <List<GradeCategoryEntity>> getCategories(int subjectId) =>
-    dataSource.getCategories(subjectId);
+  factory ScoresRepositoryImpl.create() =>
+      ScoresRepositoryImpl(ScoresRemoteDataSource(Supabase.instance.client));
 
   @override
-  Future <Map<int, List<ScoresEntity>>> getScores(int subjectId) =>
-    dataSource.getScores(subjectId);
+  Future<List<GradeCategoryEntity>> getCategories(int subjectId) =>
+      dataSource.getCategories(subjectId);
 
   @override
-  Future <ScoresEntity> addScore({
+  Future<Map<int, List<ScoresEntity>>> getScores(int subjectId) =>
+      dataSource.getScores(subjectId);
+
+  @override
+  Future<ScoresEntity> addScore({
     required int categoryId,
     required String title,
     required double scoreValue,
@@ -29,12 +33,7 @@ class ScoresRepositoryImpl implements ScoresRepository {
     maxScore: maxScore,
   );
 
-  @override 
-  Future <void> deleteScore({
-    required int categoryId,
-    required int scoreId,
-  }) => dataSource.deleteScore(
-    categoryId: categoryId,
-    scoreId: scoreId,
-  );
+  @override
+  Future<void> deleteScore({required int categoryId, required int scoreId}) =>
+      dataSource.deleteScore(categoryId: categoryId, scoreId: scoreId);
 }

@@ -32,10 +32,7 @@ final _fakeScores = {
 class ScoresPage extends StatelessWidget {
   final SubjectEntity subject;
 
-  const ScoresPage({
-    super.key,
-    required this.subject,
-  });
+  const ScoresPage({super.key, required this.subject});
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +42,7 @@ class ScoresPage extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: AppColors.text,
-          ),
+          icon: const Icon(Icons.arrow_back, color: AppColors.text),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Column(
@@ -56,16 +50,15 @@ class ScoresPage extends StatelessWidget {
           children: [
             Text(
               subject.code,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: AppColors.brandBlue,
               ),
             ),
-
             Text(
               subject.name,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
@@ -164,21 +157,22 @@ class _ScoresContent extends StatelessWidget {
                       isExpanded: isExpanded,
                       onToggle: () {
                         if (isLoading) return;
-                        context.read<ScoresBloc>().add(ScoresCategoryToggled(c.id));
+                        context
+                            .read<ScoresBloc>()
+                            .add(ScoresCategoryToggled(c.id));
                       },
                       onAdd: () {
                         if (isLoading) return;
                         _showAddScoreSheet(context, c.id);
                       },
-                      onDeleteScore: (scoreId) =>
-                          isLoading
-                              ? null
-                              : context.read<ScoresBloc>().add(
-                                  ScoresDeleteRequested(
-                                    categoryId: c.id,
-                                    scoreId: scoreId,
-                                  ),
+                      onDeleteScore: (scoreId) => isLoading
+                          ? null
+                          : context.read<ScoresBloc>().add(
+                                ScoresDeleteRequested(
+                                  categoryId: c.id,
+                                  scoreId: scoreId,
                                 ),
+                              ),
                     );
                   }).toList(),
                 ),
@@ -191,8 +185,8 @@ class _ScoresContent extends StatelessWidget {
           right: 20,
           child: _AddScoreFab(
             categories: state.categories
-              .map((c) => (id: c.id, name: c.name))
-              .toList(),
+                .map((c) => (id: c.id, name: c.name))
+                .toList(),
             onSelected: (categoryId) {
               if (isLoading) return;
               _showAddScoreSheet(context, categoryId);
@@ -214,9 +208,7 @@ class _ScoresContent extends StatelessWidget {
             size: 60,
             color: AppColors.foreground.withValues(alpha: 0.4),
           ),
-          
           const Gap(16),
-
           const Text(
             'No Grade Categories',
             style: TextStyle(
@@ -225,15 +217,10 @@ class _ScoresContent extends StatelessWidget {
               color: AppColors.foreground,
             ),
           ),
-
           const Gap(4),
-
           const Text(
             'Set up grade categories in Manage Grading',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.foreground,
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.foreground),
           ),
         ],
       ),
@@ -320,8 +307,7 @@ class _CategoryPickerSheet extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
-                child:
-                    const Icon(Icons.close, size: 22, color: AppColors.text),
+                child: const Icon(Icons.close, size: 22, color: AppColors.text),
               ),
               const Expanded(
                 child: Center(
@@ -344,8 +330,8 @@ class _CategoryPickerSheet extends StatelessWidget {
               onTap: () => onSelected(c.id),
               borderRadius: BorderRadius.circular(10),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12, horizontal: 4),
                 child: Row(
                   children: [
                     Container(
