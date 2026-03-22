@@ -9,21 +9,23 @@ import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subjec
 import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/category_tile.dart';
 
+// ---------------------------------------------------------------------------
+// Fake skeleton data — no longer needs estimatedGrade constructor arg
+// ---------------------------------------------------------------------------
 final _fakeDetail = SubjectDetailEntity(
   subject: const SubjectEntity(
-    id: '1',
+    id: 0,
     name: 'Loading Subject Name',
     code: 'LOAD 1',
     instructor: 'Loading Instructor',
     units: 3,
-    grades: {'prelim': '--', 'midterm': '--', 'final': '--'},
   ),
   categories: const [
     GradeCategoryEntity(id: 1, name: 'Loading Category', weight: 40),
     GradeCategoryEntity(id: 2, name: 'Loading Category', weight: 30),
     GradeCategoryEntity(id: 3, name: 'Loading Category', weight: 30),
   ],
-  estimatedGrade: 91.5,
+  // scores is empty → estimatedGrade getter returns 0.0 for the skeleton
 );
 
 class SubjectDetailPage extends StatelessWidget {
@@ -70,10 +72,14 @@ class SubjectDetailPage extends StatelessWidget {
             SubjectDetailError(:final message) =>
               Center(child: Text(message)),
             _ => Skeletonizer(
-              enabled: state is SubjectDetailInitial || state is SubjectDetailLoading,
+              enabled:
+                  state is SubjectDetailInitial || state is SubjectDetailLoading,
               child: _SubjectDetailContent(
-                detail: state is SubjectDetailLoaded ? state.detail : _fakeDetail,
-                isLoading: state is SubjectDetailInitial || state is SubjectDetailLoading,
+                detail: state is SubjectDetailLoaded
+                    ? state.detail
+                    : _fakeDetail,
+                isLoading:
+                    state is SubjectDetailInitial || state is SubjectDetailLoading,
               ),
             ),
           },
@@ -87,7 +93,10 @@ class _SubjectDetailContent extends StatelessWidget {
   final SubjectDetailEntity detail;
   final bool isLoading;
 
-  const _SubjectDetailContent({required this.detail, this.isLoading = false});
+  const _SubjectDetailContent({
+    required this.detail,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +106,7 @@ class _SubjectDetailContent extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // estimatedGrade is now a pure computed getter — no constructor arg needed
         _EstimatedGradeCard(grade: detail.estimatedGrade),
         const SizedBox(height: 20),
         const Text(
@@ -151,9 +161,24 @@ class _SubjectDetailContent extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Widgets (unchanged from original except _EstimatedGradeCard formatting)
+// ---------------------------------------------------------------------------
+
 class _EstimatedGradeCard extends StatelessWidget {
   final double grade;
   const _EstimatedGradeCard({required this.grade});
+
+  Color get _gradeColor {
+    if (grade >= 90) return AppColors.success;
+    if (grade >= 75) return const Color(0xFFF59E0B);
+    return AppColors.destructive;
+  }
+
+  String get _gradeLabel {
+    if (grade == 0) return '--';
+    return '${grade.toStringAsFixed(1)}%';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,13 +201,21 @@ class _EstimatedGradeCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            grade.toStringAsFixed(1),
-            style: const TextStyle(
+            _gradeLabel,
+            style: TextStyle(
               fontSize: 42,
               fontWeight: FontWeight.bold,
-              color: AppColors.brandBlue,
+              color: grade == 0 ? AppColors.foreground : _gradeColor,
             ),
           ),
+          if (grade == 0)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                'Add scores to see your estimate',
+                style: TextStyle(fontSize: 12, color: AppColors.foreground),
+              ),
+            ),
         ],
       ),
     );
@@ -256,20 +289,21 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.blueAccent.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
-        border:
-            Border.all(color: AppColors.brandBlue.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: AppColors.brandBlue.withValues(alpha: 0.5)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 1,
             child: Icon(Icons.info_outline,
                 color: AppColors.brandBlue, size: 20),
           ),
-          const Expanded(
+          Expanded(
             flex: 4,
             child: Text(
-              'Your grades will be calculated using the weighted average method. Ensure all categories\' weights account for 100% of your total grade, otherwise calculations will occur if not.',
+              'Your grades will be calculated using the weighted average method. '
+              'Ensure all categories\' weights account for 100% of your total grade.',
               style: TextStyle(fontSize: 12, color: AppColors.brandBlue),
             ),
           ),
@@ -303,7 +337,8 @@ class _WeightInfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
@@ -318,7 +353,6 @@ class _WeightInfoCard extends StatelessWidget {
                   color: AppColors.text,
                 ),
               ),
-              const SizedBox(height: 6),
               Container(
                 width: 10,
                 height: 10,
@@ -333,8 +367,7 @@ class _WeightInfoCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color:
-                      isOver100 ? AppColors.destructive : AppColors.text,
+                  color: isOver100 ? AppColors.destructive : AppColors.text,
                 ),
               ),
             ],
@@ -343,17 +376,17 @@ class _WeightInfoCard extends StatelessWidget {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            Row(
+            const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.error_outline,
+                Icon(Icons.error_outline,
                     size: 16, color: AppColors.destructive),
-                const SizedBox(width: 8),
-                const Expanded(
+                SizedBox(width: 8),
+                Expanded(
                   child: Text(
                     'Total weight exceeds 100%. Please adjust category weights.',
-                    style: TextStyle(
-                        fontSize: 12, color: AppColors.destructive),
+                    style:
+                        TextStyle(fontSize: 12, color: AppColors.destructive),
                   ),
                 ),
               ],

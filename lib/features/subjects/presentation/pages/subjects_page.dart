@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
-import 'package:tempus/features/subjects/data/data_source/scores_local_data_source.dart';
-import 'package:tempus/features/subjects/data/data_source/subject_detail_local_data_source.dart';
+import 'package:tempus/features/subjects/data/data_source/scores_remote_data_source.dart';
+import 'package:tempus/features/subjects/data/data_source/subject_detail_remote_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/scores_repository_impl.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_detail_repository_impl.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
@@ -76,6 +77,8 @@ class _SubjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final client = Supabase.instance.client;
+
     return Card(
       color: Colors.white,
       elevation: 0,
@@ -119,6 +122,7 @@ class _SubjectCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                // Grade ring placeholder — populated by SubjectDetailBloc
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -126,17 +130,18 @@ class _SubjectCard extends StatelessWidget {
                       width: 60,
                       height: 60,
                       child: CircularProgressIndicator(
-                        value: 0.92,
+                        value: 0,
                         strokeWidth: 6,
-                        color: AppColors.success,
+                        color: AppColors.brandBlue,
                         backgroundColor: Colors.grey.shade200,
                       ),
                     ),
                     const Text(
-                      '92%',
+                      '--%',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.success,
+                        fontSize: 12,
+                        color: AppColors.foreground,
                       ),
                     ),
                   ],
@@ -154,13 +159,13 @@ class _SubjectCard extends StatelessWidget {
                       builder: (_) => BlocProvider<ScoresBloc>(
                         create: (_) {
                           final repo = ScoresRepositoryImpl(
-                            ScoresLocalDataSource(),
+                            ScoresRemoteDataSource(client),
                           );
                           return ScoresBloc(
                             getScores: GetScores(repo),
                             addScore: AddScore(repo),
                             deleteScore: DeleteScore(repo),
-                          )..add(ScoresLoadRequested(int.parse(subject.id)));
+                          )..add(ScoresLoadRequested(subject.id));
                         },
                         child: ScoresPage(subject: subject),
                       ),
@@ -177,7 +182,8 @@ class _SubjectCard extends StatelessWidget {
                       builder: (_) => BlocProvider<SubjectDetailBloc>(
                         create: (_) {
                           final repo = SubjectDetailRepositoryImpl(
-                            SubjectDetailLocalDataSource(),
+                            SubjectDetailRemoteDataSource(client),
+                            ScoresRemoteDataSource(client),
                           );
                           return SubjectDetailBloc(
                             getSubjectDetail: GetSubjectDetail(repo),
@@ -251,11 +257,10 @@ class _AddSubjectBottomSheet extends StatefulWidget {
 
 class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
   final _formKey = GlobalKey<FormState>();
-
-  final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _profController = TextEditingController();
-  final TextEditingController _unitsController = TextEditingController();
+  final _codeController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _profController = TextEditingController();
+  final _unitsController = TextEditingController();
 
   @override
   void dispose() {
@@ -269,17 +274,16 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    // id=0 is a sentinel — the remote DB assigns the real id.
     final newSubject = SubjectEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: 0,
       name: _nameController.text.trim(),
       code: _codeController.text.trim(),
       instructor: _profController.text.trim(),
       units: int.parse(_unitsController.text.trim()),
-      grades: const {'prelim': '--', 'midterm': '--', 'final': '--'},
     );
 
     context.read<SubjectBloc>().add(SubjectAddRequested(newSubject));
-
     Navigator.pop(context);
   }
 
@@ -313,7 +317,7 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                     ),
                   ),
                 ),
-                Text(
+                const Text(
                   'Add Subject',
                   style: TextStyle(
                     fontSize: 24,
@@ -326,8 +330,8 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                   label: "Subject Name",
                   hint: "e.g. Data Structures and Algorithms",
                   controller: _nameController,
-                  validator: (v) => 
-                    v == null || v.isEmpty ? "Required" : null,
+                  validator: (v) =>
+                      v == null || v.isEmpty ? "Required" : null,
                 ),
                 const SizedBox(height: 16),
                 UnderlineTextField(
@@ -357,12 +361,8 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                         hint: "e.g. 3",
                         controller: _unitsController,
                         validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Req.';
-                          }
-                          if (int.tryParse(v) == null) {
-                            return 'NaN';
-                          }
+                          if (v == null || v.isEmpty) return 'Req.';
+                          if (int.tryParse(v) == null) return 'NaN';
                           return null;
                         },
                       ),
