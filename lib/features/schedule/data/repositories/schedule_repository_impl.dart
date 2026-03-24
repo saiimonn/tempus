@@ -1,23 +1,26 @@
-import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tempus/features/schedule/data/data_sources/schedule_remote_data_source.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 import 'package:tempus/features/schedule/domain/repositories/schedule_repository.dart';
 
 class ScheduleRepositoryImpl implements ScheduleRepository {
-  final ScheduleLocalDataSource dataSource;
+  final ScheduleRemoteDataSource dataSource;
 
   const ScheduleRepositoryImpl(this.dataSource);
 
-  @override
-  Future <List<ScheduleSubjectEntity>> getSubjects() => 
-    dataSource.getSubjects();
-
-  @override 
-  Future <List<ScheduleEntryEntity>> getEntries() => 
-    dataSource.getEntries();
+  factory ScheduleRepositoryImpl.create() => ScheduleRepositoryImpl(
+    ScheduleRemoteDataSource(Supabase.instance.client),
+  );
 
   @override
-  Future <ScheduleEntryEntity> addEntry({
+  Future<List<ScheduleSubjectEntity>> getSubjects() => dataSource.getSubjects();
+
+  @override
+  Future<List<ScheduleEntryEntity>> getEntries() => dataSource.getEntries();
+
+  @override
+  Future<ScheduleEntryEntity> addEntry({
     required int subId,
     required String subjectName,
     required String subjectCode,
@@ -33,6 +36,6 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
     endTime: endTime,
   );
 
-  @override 
-  Future <void> deleteEntry(int entryId) => dataSource.deleteEntry(entryId);
+  @override
+  Future<void> deleteEntry(int entryId) => dataSource.deleteEntry(entryId);
 }

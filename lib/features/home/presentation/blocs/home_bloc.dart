@@ -5,7 +5,7 @@ import 'package:tempus/features/home/domain/entities/home_summary_entity.dart';
 import 'package:tempus/features/tasks/data/data_sources/task_remote_data_source.dart';
 import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
-import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
+import 'package:tempus/features/schedule/data/data_sources/schedule_remote_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
 import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
 import 'package:tempus/features/finance/data/data_sources/finance_remote_data_source.dart';
@@ -34,10 +34,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   factory HomeBloc.create() {
     final client = Supabase.instance.client;
 
-    final taskRepo =
-        TaskRepositoryImpl(TaskRemoteDataSource(client));
+    final taskRepo = TaskRepositoryImpl(TaskRemoteDataSource(client));
+    // Schedule is now fully remote — no more ScheduleLocalDataSource.
     final scheduleRepo =
-        ScheduleRepositoryImpl(ScheduleLocalDataSource()); // still local
+        ScheduleRepositoryImpl(ScheduleRemoteDataSource(client));
     final financeRepo =
         FinanceRepositoryImpl(FinanceRemoteDataSource(client));
 

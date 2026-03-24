@@ -16,7 +16,7 @@ import 'package:tempus/features/home/presentation/widgets/home_schedule_card.dar
 import 'package:tempus/features/home/presentation/widgets/home_task_card.dart';
 import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:tempus/features/profile/presentation/pages/profile_page.dart';
-import 'package:tempus/features/schedule/data/data_sources/schedule_local_data_source.dart';
+import 'package:tempus/features/schedule/data/data_sources/schedule_remote_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
@@ -167,9 +167,13 @@ class _HomePageState extends State<HomePage> {
             firstName: name,
             onNavigateToTab: _onItemTapped,
           ),
+
+          // Schedule — now fully remote.
           BlocProvider<ScheduleBloc>(
             create: (_) {
-              final repo = ScheduleRepositoryImpl(ScheduleLocalDataSource());
+              final repo = ScheduleRepositoryImpl(
+                ScheduleRemoteDataSource(client),
+              );
               return ScheduleBloc(
                 loadSchedule: LoadSchedule(repo),
                 addScheduleEntry: AddScheduleEntry(repo),
@@ -178,7 +182,8 @@ class _HomePageState extends State<HomePage> {
             },
             child: const SchedulePage(),
           ),
-          // Tasks — remote
+
+          // Tasks — remote.
           BlocProvider<TaskBloc>(
             create: (_) {
               final repo = TaskRepositoryImpl(TaskRemoteDataSource(client));
@@ -191,12 +196,14 @@ class _HomePageState extends State<HomePage> {
             },
             child: const TasksPage(),
           ),
-          // Finance — all three blocs remote
+
+          // Finance — all three blocs remote.
           MultiBlocProvider(
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
-          // Subjects — remote
+
+          // Subjects — remote.
           BlocProvider<SubjectBloc>(
             create: (_) {
               final repo = SubjectRepositoryImpl(
