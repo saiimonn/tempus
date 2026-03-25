@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/widgets/add_schedule_sheet.dart';
 
@@ -45,9 +46,13 @@ class AddButton extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
+
+      builder: (sheetContext) => BlocProvider.value(
         value: context.read<ScheduleBloc>(),
-        child: AddScheduleSheet(subjects: subjects),
+        child: BlocProvider(
+          create: (_) => AddScheduleBloc(),
+          child: AddScheduleSheet(subjects: subjects),
+        ),
       ),
     );
   }

@@ -14,9 +14,12 @@ class SubjectBloc extends Bloc<SubjectEvent, SubjectState> {
   final GetSubjects _getSubjects;
   final AddSubject _addSubject;
 
+  final void Function()? onSubjectAdded;
+
   SubjectBloc({
     required GetSubjects getSubjects,
     required AddSubject addSubject,
+    this.onSubjectAdded,
   })  : _getSubjects = getSubjects,
         _addSubject = addSubject,
         super(SubjectInitial()) {
@@ -55,6 +58,7 @@ class SubjectBloc extends Bloc<SubjectEvent, SubjectState> {
     try {
       final added = await _addSubject(event.subject);
       emit(SubjectLoaded([...curr.subjects, added]));
+      onSubjectAdded?.call();
     } catch (_) {
       emit(SubjectError('Failed to add subject'));
     }

@@ -23,6 +23,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         _deleteScheduleEntry = deleteScheduleEntry,
         super(ScheduleInitial()) {
     on<ScheduleLoadRequested>(_onLoad);
+    on<ScheduleSubjectsRefreshRequested>(_onRefreshSubjects);
     on<ScheduleEntryAddRequested>(_onAdd);
     on<ScheduleEntryDeleteRequested>(_onDelete);
     on<ScheduleDaySelected>(_onSelectDay);
@@ -48,6 +49,20 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     }
   }
 
+  Future<void> _onRefreshSubjects(
+    ScheduleSubjectsRefreshRequested event,
+    Emitter<ScheduleState> emit,
+  ) async {
+    if (state is! ScheduleLoaded) return;
+    final current = state as ScheduleLoaded;
+
+    try {
+      final result = await _loadSchedule();
+      emit(current.copyWith(subjects: result.subjects));
+    } catch (_) {
+    }
+  }
+
   Future<void> _onAdd(
     ScheduleEntryAddRequested event,
     Emitter<ScheduleState> emit,
@@ -55,7 +70,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
     if (state is! ScheduleLoaded) return;
     final current = state as ScheduleLoaded;
     try {
-      final newEntry = await _addScheduleEntry(
+      final inserted = await _addScheduleEntry(
         subId: event.subId,
         subjectName: event.subjectName,
         subjectCode: event.subjectCode,
@@ -63,7 +78,7 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
         startTime: event.startTime,
         endTime: event.endTime,
       );
-      emit(current.copyWith(entries: [...current.entries, newEntry]));
+      emit(current.copyWith(entries: [...current.entries, inserted]));
     } catch (_) {
       emit(ScheduleError('Failed to add schedule entry'));
     }

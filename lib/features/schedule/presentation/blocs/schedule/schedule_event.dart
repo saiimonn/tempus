@@ -4,6 +4,8 @@ sealed class ScheduleEvent {}
 
 class ScheduleLoadRequested extends ScheduleEvent {}
 
+class ScheduleSubjectsRefreshRequested extends ScheduleEvent {}
+
 class ScheduleEntryAddRequested extends ScheduleEvent {
   final int subId;
   final String subjectName;

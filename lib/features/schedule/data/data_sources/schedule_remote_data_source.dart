@@ -19,53 +19,87 @@ class ScheduleRemoteDataSource {
 
     return (data as List<dynamic>).map((row) {
       return ScheduleSubjectModel.fromMap({
-        'id': row['id'] as int,
-        'name': row['name'] as String,
-        'code': row['code'] as String,
+        'id': row['id'],
+        'name': row['name'],
+        'code': row['code'],
       });
     }).toList();
   }
 
   Future<List<ScheduleEntryModel>> getEntries() async {
-    final data = await _client
+    // Step 1 — get the user's subject ids & metadata in one shot.
+    final subjectRows = await _client
+        .from('subject')
+        .select('id, name, code')
+        .eq('user_id', _userId)
+        .eq('is_deleted', false);
+
+    final subjects = (subjectRows as List<dynamic>);
+    if (subjects.isEmpty) return [];
+
+    final subjectNames = <int, String>{};
+    final subjectCodes = <int, String>{};
+    for (final s in subjects) {
+      final id = s['id'] as int;
+      subjectNames[id] = s['name'] as String;
+      subjectCodes[id] = s['code'] as String;
+    }
+
+    final subjectIds = subjectNames.keys.toList();
+
+    final scheduleRows = await _client
         .from('schedule')
-        .select(
-          'id, sub_id, day, start_time, end_time, subject:sub_id(name, code)',
-        )
+        .select('id, sub_id, day, start_time, end_time')
+        .inFilter('sub_id', subjectIds)
         .eq('is_deleted', false)
         .order('start_time', ascending: true);
 
-    String trimTime(String raw) => raw.length >= 5 ? raw.substring(0, 5) : raw;
+    final Map<String, _GroupedEntry> grouped = {};
 
-    final Map<String, Map<String, dynamic>> grouped = {};
-
-    for (final row in data as List<dynamic>) {
-      final subject = row['subject'] as Map<String, dynamic>?;
+    for (final row in (scheduleRows as List<dynamic>)) {
       final subId = row['sub_id'] as int;
-      final start = trimTime(row['start_time'] as String);
-      final end = trimTime(row['end_time'] as String);
+      final startTime = _trimTime(row['start_time'] as String);
+      final endTime = _trimTime(row['end_time'] as String);
+      final day = row['day'] as String;
+      final rowId = row['id'] as int;
 
-      final key = '${subId}_${start}_$end';
+      final key = '$subId|$startTime|$endTime';
 
-      if (!grouped.containsKey(key)) {
-        grouped[key] = {
-          'id': row['id'] as int,
-          'sub_id': subId,
-          'subject_name': subject?['name'] as String? ?? '',
-          'subject_code': subject?['code'] as String? ?? '',
-          'start_time': start,
-          'end_time': end,
-          'days': <String>[],
-        };
-      }
+      grouped.putIfAbsent(
+        key,
+        () => _GroupedEntry(
+          id: rowId,
+          subId: subId,
+          subjectName: subjectNames[subId] ?? '',
+          subjectCode: subjectCodes[subId] ?? '',
+          startTime: startTime,
+          endTime: endTime,
+          days: [],
+        ),
+      );
 
-      final day = row['day'] as String?;
-      if (day != null && day.isNotEmpty) {
-        (grouped[key]!['days'] as List<String>).add(day);
-      }
+      grouped[key]!.days.add(day);
     }
 
-    return grouped.values.map(ScheduleEntryModel.fromMap).toList();
+    const dayOrder = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
+    ];
+
+    return grouped.values.map((g) {
+      g.days.sort(
+        (a, b) => dayOrder.indexOf(a).compareTo(dayOrder.indexOf(b)),
+      );
+      return ScheduleEntryModel(
+        id: g.id,
+        subId: g.subId,
+        subjectName: g.subjectName,
+        subjectCode: g.subjectCode,
+        days: List<String>.from(g.days),
+        startTime: g.startTime,
+        endTime: g.endTime,
+      );
+    }).toList();
   }
 
   Future<ScheduleEntryModel> addEntry({
@@ -76,52 +110,45 @@ class ScheduleRemoteDataSource {
     required String startTime,
     required String endTime,
   }) async {
-    if (days.isEmpty) {
-      throw ArgumentError('days must not be empty');
-    }
+    assert(days.isNotEmpty, 'days must not be empty');
 
-    final rows = days
-        .map(
-          (day) => {
-            'sub_id': subId,
-            'day': day,
-            'start_time': startTime,
-            'end_time': endTime,
-          },
-        )
-        .toList();
-
-    final inserted = await _client
+    final rows = await _client
         .from('schedule')
-        .insert(rows)
-        .select('id, sub_id, start_time, end_time')
-        .order('id', ascending: true);
+        .insert(
+          days
+              .map((day) => {
+                    'sub_id': subId,
+                    'day': day,
+                    'start_time': startTime,
+                    'end_time': endTime,
+                  })
+              .toList(),
+        )
+        .select('id');
 
-    final firstRow = (inserted as List<dynamic>).first as Map<String, dynamic>;
+    final firstId = (rows as List<dynamic>).first['id'] as int;
 
-    String trimTime(String raw) => raw.length >= 5 ? raw.substring(0, 5) : raw;
-
-    return ScheduleEntryModel.fromMap({
-      'id': firstRow['id'] as int,
-      'sub_id': subId,
-      'subject_name': subjectName,
-      'subject_code': subjectCode,
-      'days': days,
-      'start_time': trimTime(firstRow['start_time'] as String),
-      'end_time': trimTime(firstRow['end_time'] as String),
-    });
+    return ScheduleEntryModel(
+      id: firstId,
+      subId: subId,
+      subjectName: subjectName,
+      subjectCode: subjectCode,
+      days: List<String>.from(days),
+      startTime: startTime,
+      endTime: endTime,
+    );
   }
 
   Future<void> deleteEntry(int entryId) async {
-    final anchor = await _client
+    final seed = await _client
         .from('schedule')
         .select('sub_id, start_time, end_time')
         .eq('id', entryId)
         .single();
 
-    final subId = anchor['sub_id'] as int;
-    final startTime = anchor['start_time'] as String;
-    final endTime = anchor['end_time'] as String;
+    final subId = seed['sub_id'] as int;
+    final startTime = seed['start_time'] as String;
+    final endTime = seed['end_time'] as String;
 
     await _client
         .from('schedule')
@@ -131,4 +158,27 @@ class ScheduleRemoteDataSource {
         .eq('end_time', endTime)
         .eq('is_deleted', false);
   }
+
+  String _trimTime(String raw) =>
+      raw.length >= 5 ? raw.substring(0, 5) : raw;
+}
+
+class _GroupedEntry {
+  final int id;
+  final int subId;
+  final String subjectName;
+  final String subjectCode;
+  final String startTime;
+  final String endTime;
+  final List<String> days;
+
+  _GroupedEntry({
+    required this.id,
+    required this.subId,
+    required this.subjectName,
+    required this.subjectCode,
+    required this.startTime,
+    required this.endTime,
+    required this.days,
+  });
 }

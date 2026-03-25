@@ -39,12 +39,17 @@ import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
 import 'package:tempus/features/tasks/domain/use_cases/update_task.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
+import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
+import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
+import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
+import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
+import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
 final _fakeSummary = HomeSummaryEntity(
   todayTasks: List.generate(
     3,
-    (i) => TaskEntity(
-        id: i, title: 'Loading task title here', status: 'pending'),
+    (i) =>
+        TaskEntity(id: i, title: 'Loading task title here', status: 'pending'),
   ),
   todaySchedule: List.generate(
     3,
@@ -70,6 +75,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  ScheduleBloc? _scheduleBloc;
 
   Future<void> _signOut() async {
     try {
@@ -163,27 +169,27 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _HomeContent(
-            firstName: name,
-            onNavigateToTab: _onItemTapped,
-          ),
+          _HomeContent(firstName: name, onNavigateToTab: _onItemTapped),
 
-          // Schedule — now fully remote.
+          // ── Schedule (remote) ──────────────────────────────────────────────────
           BlocProvider<ScheduleBloc>(
-            create: (_) {
-              final repo = ScheduleRepositoryImpl(
-                ScheduleRemoteDataSource(client),
-              );
-              return ScheduleBloc(
-                loadSchedule: LoadSchedule(repo),
-                addScheduleEntry: AddScheduleEntry(repo),
-                deleteScheduleEntry: DeleteScheduleEntry(repo),
+            create: (ctx) {
+              // Store a reference so SubjectBloc can call refreshSubjects on it.
+              _scheduleBloc = ScheduleBloc(
+                loadSchedule: LoadSchedule(ScheduleRepositoryImpl.create()),
+                addScheduleEntry: AddScheduleEntry(
+                  ScheduleRepositoryImpl.create(),
+                ),
+                deleteScheduleEntry: DeleteScheduleEntry(
+                  ScheduleRepositoryImpl.create(),
+                ),
               )..add(ScheduleLoadRequested());
+              return _scheduleBloc!;
             },
             child: const SchedulePage(),
           ),
 
-          // Tasks — remote.
+          // ── Tasks (remote) ─────────────────────────────────────────────────────
           BlocProvider<TaskBloc>(
             create: (_) {
               final repo = TaskRepositoryImpl(TaskRemoteDataSource(client));
@@ -197,13 +203,13 @@ class _HomePageState extends State<HomePage> {
             child: const TasksPage(),
           ),
 
-          // Finance — all three blocs remote.
+          // ── Finance (remote) ───────────────────────────────────────────────────
           MultiBlocProvider(
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
 
-          // Subjects — remote.
+          // ── Subjects (remote) — notifies ScheduleBloc on subject add ──────────
           BlocProvider<SubjectBloc>(
             create: (_) {
               final repo = SubjectRepositoryImpl(
@@ -212,6 +218,10 @@ class _HomePageState extends State<HomePage> {
               return SubjectBloc(
                 getSubjects: GetSubjects(repo),
                 addSubject: AddSubject(repo),
+                // Callback: tell ScheduleBloc its subject list is stale.
+                onSubjectAdded: () {
+                  _scheduleBloc?.add(ScheduleSubjectsRefreshRequested());
+                },
               )..add(SubjectLoadRequested());
             },
             child: const SubjectsPage(),
@@ -230,10 +240,7 @@ class _HomeContent extends StatelessWidget {
   final String firstName;
   final ValueChanged<int> onNavigateToTab;
 
-  const _HomeContent({
-    required this.firstName,
-    required this.onNavigateToTab,
-  });
+  const _HomeContent({required this.firstName, required this.onNavigateToTab});
 
   @override
   Widget build(BuildContext context) {
@@ -242,12 +249,12 @@ class _HomeContent extends StatelessWidget {
         if (state.status == HomeStatus.error) {
           return _ErrorContent(
             message: state.errorMessage ?? 'Something went wrong',
-            onRetry: () =>
-                context.read<HomeBloc>().add(HomeLoadRequested()),
+            onRetry: () => context.read<HomeBloc>().add(HomeLoadRequested()),
           );
         }
 
-        final isLoading = state.status == HomeStatus.initial ||
+        final isLoading =
+            state.status == HomeStatus.initial ||
             state.status == HomeStatus.loading;
 
         return Skeletonizer(
@@ -289,7 +296,9 @@ class _ErrorContent extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: AppColors.destructive, fontSize: 16),
+                color: AppColors.destructive,
+                fontSize: 16,
+              ),
             ),
             const Gap(24),
             ElevatedButton(

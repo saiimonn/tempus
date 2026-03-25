@@ -54,18 +54,23 @@ class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
 
     TimeOfDay newEnd = state.endTime;
 
-    if(endMins <= startMins) {
+    if (endMins <= startMins) {
       final bumped = startMins + 90;
-      newEnd = TimeOfDay(hour: (bumped ~/60) % 24, minute: bumped % 60);
+      newEnd = TimeOfDay(hour: (bumped ~/ 60) % 24, minute: bumped % 60);
     }
 
-    emit(state.copyWith(startTime: picked, endTime: newEnd));
+    final next = state.copyWith(startTime: picked, endTime: newEnd);
+
+    emit(next);
   }
 
   void _onEndTimeChanged(
     AddScheduleEndTimeChanged event,
     Emitter <AddScheduleState> emit,
   ) {
-    emit(state.copyWith(endTime: event.time));
+    final picked = event.time;
+    final next = state.copyWith(endTime: picked);
+
+    emit(next);
   }
 }
