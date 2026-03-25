@@ -6,6 +6,9 @@ import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity
 import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
+String _fmtTod(TimeOfDay t) =>
+    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
 const _dayAbbr = {
   'Monday': 'Mon',
   'Tuesday': 'Tue',
@@ -23,10 +26,7 @@ class AddScheduleSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => AddScheduleBloc(),
-      child: _AddScheduleSheetBody(subjects: subjects),
-    );
+    return _AddScheduleSheetBody(subjects: subjects);
   }
 }
 
@@ -95,16 +95,16 @@ class _AddScheduleSheetBody extends StatelessWidget {
             const Gap(16),
 
             _buildLabel('Days'),
-            const _DayChips(),
+            _DayChips(),
 
             const Gap(16),
 
             _buildLabel('Time'),
-            const _TimeRow(),
+            _TimeRow(),
 
             const Gap(28),
 
-            const _ConfirmButton(),
+            _ConfirmButton(),
           ],
         ),
       ),
@@ -120,10 +120,6 @@ class _AddScheduleSheetBody extends StatelessWidget {
         ),
       );
 }
-
-// ---------------------------------------------------------------------------
-// Subject dropdown
-// ---------------------------------------------------------------------------
 
 class _SubjectDropdown extends StatelessWidget {
   final List<ScheduleSubjectEntity> subjects;
@@ -223,10 +219,6 @@ class _SubjectDropdown extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// No subjects hint
-// ---------------------------------------------------------------------------
-
 class _NoSubjectsHint extends StatelessWidget {
   const _NoSubjectsHint();
 
@@ -246,10 +238,6 @@ class _NoSubjectsHint extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Day chips
-// ---------------------------------------------------------------------------
 
 class _DayChips extends StatelessWidget {
   const _DayChips();
@@ -302,10 +290,6 @@ class _DayChips extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Time row
-// ---------------------------------------------------------------------------
-
 class _TimeRow extends StatelessWidget {
   const _TimeRow();
 
@@ -337,11 +321,13 @@ class _TimeRow extends StatelessWidget {
 
     if (picked == null || !context.mounted) return;
 
-    context.read<AddScheduleBloc>().add(
-          isStart
-              ? AddScheduleStartTimeChanged(picked)
-              : AddScheduleEndTimeChanged(picked),
-        );
+    final bloc = context.read<AddScheduleBloc>();
+
+    bloc.add(
+      isStart
+          ? AddScheduleStartTimeChanged(picked)
+          : AddScheduleEndTimeChanged(picked),
+    );
   }
 
   @override
@@ -434,10 +420,6 @@ class _TimeButton extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Confirm button
-// ---------------------------------------------------------------------------
-
 class _ConfirmButton extends StatelessWidget {
   const _ConfirmButton();
 
@@ -449,7 +431,7 @@ class _ConfirmButton extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: state.isValid ? () => _confirm(context, state) : null,
+            onPressed: state.isValid ? () => _confirm(context) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.brandBlue,
               disabledBackgroundColor:
@@ -474,8 +456,12 @@ class _ConfirmButton extends StatelessWidget {
     );
   }
 
-  void _confirm(BuildContext context, AddScheduleState state) {
+  void _confirm(BuildContext context) {
+    final bloc = context.read<AddScheduleBloc>();
+    final state = bloc.state;
+
     final subject = state.selectedSubject!;
+
     context.read<ScheduleBloc>().add(
           ScheduleEntryAddRequested(
             subId: subject.id,
