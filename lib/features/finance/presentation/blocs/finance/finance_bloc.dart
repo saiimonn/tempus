@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tempus/core/utils/timed_loader.dart';
 import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/finance/domain/use_cases/get_finance.dart';
 import 'package:tempus/features/finance/domain/use_cases/update_budget.dart';
@@ -14,9 +15,9 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   FinanceBloc({
     required GetFinance getFinance,
     required UpdateBudget updateBudget,
-  })  : _getFinance = getFinance,
-        _updateBudget = updateBudget,
-        super(const FinanceState()) {
+  }) : _getFinance = getFinance,
+       _updateBudget = updateBudget,
+       super(const FinanceState()) {
     on<FinanceLoadRequested>(_onLoad);
     on<FinanceBudgetUpdateRequested>(_onUpdateBudget);
     on<FinanceTabChanged>(_onTabChanged);
@@ -29,11 +30,12 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
   ) async {
     emit(state.copyWith(status: FinanceStatus.loading));
 
-    // NOTE: the artificial Future.delayed that was here has been removed.
-    // Skeletonizer shows while the real network request is in flight.
-
     try {
-      final finance = await _getFinance();
+      final finance = await withMinDuration(
+        _getFinance(),
+        minDuration: const Duration(milliseconds: 600),
+      );
+
       emit(state.copyWith(status: FinanceStatus.loaded, finance: finance));
     } catch (_) {
       emit(

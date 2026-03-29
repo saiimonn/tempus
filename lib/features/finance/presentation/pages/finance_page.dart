@@ -32,12 +32,13 @@ class FinancePage extends StatelessWidget {
   static List<BlocProvider> createProviders() {
     final client = Supabase.instance.client;
 
-    final financeRepo =
-        FinanceRepositoryImpl(FinanceRemoteDataSource(client));
-    final transactionRepo =
-        TransactionRepositoryImpl(TransactionsRemoteDataSource(client));
-    final subscriptionRepo =
-        SubscriptionRepositoryImpl(SubscriptionRemoteDataSource(client));
+    final financeRepo = FinanceRepositoryImpl(FinanceRemoteDataSource(client));
+    final transactionRepo = TransactionRepositoryImpl(
+      TransactionsRemoteDataSource(client),
+    );
+    final subscriptionRepo = SubscriptionRepositoryImpl(
+      SubscriptionRemoteDataSource(client),
+    );
 
     return [
       BlocProvider<FinanceBloc>(
@@ -67,7 +68,9 @@ class FinancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
       builder: (context, state) {
-        final bool isLoading = state.status == FinanceStatus.loading;
+        final bool isLoading =
+            state.status == FinanceStatus.loading ||
+            state.status == FinanceStatus.initial;
 
         final displayState = isLoading
             ? state.copyWith(
@@ -121,9 +124,8 @@ class _FinanceContent extends StatelessWidget {
                     final isSelected = state.selectedTabIndex == i;
 
                     return GestureDetector(
-                      onTap: () => context
-                          .read<FinanceBloc>()
-                          .add(FinanceTabChanged(i)),
+                      onTap: () =>
+                          context.read<FinanceBloc>().add(FinanceTabChanged(i)),
                       child: Container(
                         margin: const EdgeInsets.only(right: 20),
                         padding: const EdgeInsets.only(bottom: 10),

@@ -1,9 +1,14 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tempus/core/utils/timed_loader.dart';
+import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
 import 'package:tempus/features/home/domain/entities/home_summary_entity.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 import 'package:tempus/features/tasks/data/data_sources/task_remote_data_source.dart';
 import 'package:tempus/features/tasks/data/repositories/task_repository_impl.dart';
+import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
 import 'package:tempus/features/schedule/data/data_sources/schedule_remote_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
@@ -24,10 +29,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     required GetTasks getTasks,
     required LoadSchedule loadSchedule,
     required GetFinance getFinance,
-  })  : _getTasks = getTasks,
-        _loadSchedule = loadSchedule,
-        _getFinance = getFinance,
-        super(const HomeState.initial()) {
+  }) : _getTasks = getTasks,
+       _loadSchedule = loadSchedule,
+       _getFinance = getFinance,
+       super(const HomeState.initial()) {
     on<HomeLoadRequested>(_onLoad);
   }
 
@@ -36,10 +41,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
     final taskRepo = TaskRepositoryImpl(TaskRemoteDataSource(client));
     // Schedule is now fully remote — no more ScheduleLocalDataSource.
-    final scheduleRepo =
-        ScheduleRepositoryImpl(ScheduleRemoteDataSource(client));
-    final financeRepo =
-        FinanceRepositoryImpl(FinanceRemoteDataSource(client));
+    final scheduleRepo = ScheduleRepositoryImpl(
+      ScheduleRemoteDataSource(client),
+    );
+    final financeRepo = FinanceRepositoryImpl(FinanceRemoteDataSource(client));
 
     return HomeBloc(
       getTasks: GetTasks(taskRepo),
@@ -55,9 +60,18 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final now = DateTime.now();
       final todayDayName = _dayName(now.weekday);
 
-      final tasks = await _getTasks();
-      final schedule = await _loadSchedule();
-      final finance = await _getFinance();
+      final results = await withMinDuration(
+        Future.wait([_getTasks(), _loadSchedule(), _getFinance()]),
+      );
+
+      final tasks = results[0] as List<TaskEntity>;
+      final schedule =
+          results[1]
+              as ({
+                List<ScheduleSubjectEntity> subjects,
+                List<ScheduleEntryEntity> entries,
+              });
+      final finance = results[2] as FinanceEntity;
 
       final todayTasks = tasks
           .where((t) => !t.isComplete && _isToday(t.dueDate, now))
@@ -67,13 +81,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           schedule.entries.where((e) => e.days.contains(todayDayName)).toList()
             ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
-      final summary = HomeSummaryEntity(
-        todayTasks: todayTasks,
-        todaySchedule: todaySchedule,
-        finance: finance,
+      emit(
+        state.copyWith(
+          status: HomeStatus.loaded,
+          summary: HomeSummaryEntity(
+            todayTasks: todayTasks,
+            todaySchedule: todaySchedule,
+            finance: finance,
+          ),
+        ),
       );
-
-      emit(state.copyWith(status: HomeStatus.loaded, summary: summary));
+      
     } catch (_) {
       emit(
         state.copyWith(
