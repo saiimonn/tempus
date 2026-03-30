@@ -9,6 +9,11 @@ class TaskAddRequested extends TaskEvent {
   TaskAddRequested(this.task);
 }
 
+class TaskUpdateRequested extends TaskEvent {
+  final TaskEntity task;
+  TaskUpdateRequested(this.task);
+}
+
 class TaskToggleCompleted extends TaskEvent {
   final int taskId;
   TaskToggleCompleted(this.taskId);

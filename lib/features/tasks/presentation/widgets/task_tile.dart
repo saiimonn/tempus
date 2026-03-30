@@ -4,6 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
+import 'package:tempus/features/tasks/presentation/widgets/add_task_sheet.dart';
 
 class TaskTile extends StatelessWidget {
   final TaskEntity task;
@@ -16,7 +17,11 @@ class TaskTile extends StatelessWidget {
     if (task.dueDate != null) {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final taskDay = DateTime(task.dueDate!.year, task.dueDate!.month, task.dueDate!.day);
+      final taskDay = DateTime(
+        task.dueDate!.year,
+        task.dueDate!.month,
+        task.dueDate!.day,
+      );
       final diff = taskDay.difference(today).inDays;
 
       if (diff == 0) {
@@ -29,8 +34,20 @@ class TaskTile extends StatelessWidget {
         parts.add('${diff.abs()} days ago');
       } else {
         // Format date nicely
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         parts.add('${months[task.dueDate!.month - 1]} ${task.dueDate!.day}');
       }
     }
@@ -51,6 +68,18 @@ class TaskTile extends StatelessWidget {
     return parts.join(' · ');
   }
 
+  void _showEditSheet(BuildContext context) {
+    final taskBloc = context.read<TaskBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BlocProvider.value(
+        value: taskBloc,
+        child: AddTaskSheet(initialTask: task),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -63,17 +92,18 @@ class TaskTile extends StatelessWidget {
           color: AppColors.destructive.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 22)
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 22),
       ),
-      onDismissed: (_) => 
-        context.read<TaskBloc>().add(TaskDeleteRequested(task.id)),
+      onDismissed: (_) =>
+          context.read<TaskBloc>().add(TaskDeleteRequested(task.id)),
       child: Container(
         margin: const EdgeInsets.only(bottom: 4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () => context.read<TaskBloc>().add(TaskToggleCompleted(task.id)),
+              onTap: () =>
+                  context.read<TaskBloc>().add(TaskToggleCompleted(task.id)),
               child: Container(
                 width: 22,
                 height: 22,
@@ -81,17 +111,17 @@ class TaskTile extends StatelessWidget {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: task.isComplete
-                      ? AppColors.success
-                      : AppColors.foreground.withValues(alpha: 0.4),
+                        ? AppColors.success
+                        : AppColors.foreground.withValues(alpha: 0.4),
                     width: 1.5,
                   ),
                   color: task.isComplete
-                    ? AppColors.success
-                    : Colors.transparent,
+                      ? AppColors.success
+                      : Colors.transparent,
                 ),
                 child: task.isComplete
-                  ? const Icon(Icons.check, size: 12, color: Colors.white)
-                  : null,
+                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    : null,
               ),
             ),
 
@@ -107,11 +137,11 @@ class TaskTile extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: task.isComplete
-                        ? AppColors.foreground
-                        : AppColors.text,
+                          ? AppColors.foreground
+                          : AppColors.text,
                       decoration: task.isComplete
-                        ? TextDecoration.lineThrough
-                        : null,
+                          ? TextDecoration.lineThrough
+                          : null,
                       decorationColor: AppColors.foreground,
                     ),
                   ),
@@ -125,6 +155,18 @@ class TaskTile extends StatelessWidget {
                       ),
                     ),
                 ],
+              ),
+            ),
+            
+            GestureDetector(
+              onTap: () => _showEditSheet(context),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: AppColors.foreground.withValues(alpha: 0.45),
+                ),
               ),
             ),
           ],

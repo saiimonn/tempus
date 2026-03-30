@@ -145,6 +145,12 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications),
+            tooltip: 'Notifications',
+            onPressed: () => print("Notification Page"),
+          ),
+          
+          IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Account',
             onPressed: () {
@@ -158,11 +164,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign Out',
-            onPressed: _signOut,
           ),
         ],
       ),
