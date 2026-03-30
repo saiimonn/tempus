@@ -4,7 +4,7 @@ import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
-import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
+import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/presentation/blocs/add_task/add_task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
@@ -83,11 +83,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     if (task.subId != null &&
         task.subjectName != null &&
         task.subjectCode != null) {
-      bloc.add(AddTaskSubjectSelected(
-        id: task.subId!,
-        name: task.subjectName!,
-        code: task.subjectCode!,
-      ));
+      bloc.add(
+        AddTaskSubjectSelected(
+          id: task.subId!,
+          name: task.subjectName!,
+          code: task.subjectCode!,
+        ),
+      );
     }
 
     return bloc;
@@ -130,8 +132,11 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
-                        child: const Icon(Icons.close,
-                            size: 22, color: AppColors.text),
+                        child: const Icon(
+                          Icons.close,
+                          size: 22,
+                          color: AppColors.text,
+                        ),
                       ),
                       const Expanded(
                         child: Center(
@@ -174,24 +179,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         isActive: formState.dueDate != null,
                         onTap: () => _showDateOptions(context),
                         onClear: formState.dueDate != null
-                            ? () => context
-                                .read<AddTaskBloc>()
-                                .add(AddTaskDueDateCleared())
+                            ? () => context.read<AddTaskBloc>().add(
+                                AddTaskDueDateCleared(),
+                              )
                             : null,
                       ),
                       const Gap(8),
-                      // Time chip — only visible when a date is set
-                      if (formState.dueDate != null) ...[
-                        _ActionChip(
-                          icon: Icons.access_time_rounded,
-                          label: formState.dueTime != null
-                              ? _formatTime(formState.dueTime!)
-                              : 'Time',
-                          isActive: formState.dueTime != null,
-                          onTap: () => _showTimePicker(context),
-                        ),
-                        const Gap(8),
-                      ],
                       // Subject chip
                       _ActionChip(
                         icon: Icons.book_rounded,
@@ -201,9 +194,9 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         isActive: formState.selectedSubject != null,
                         onTap: () => _showSubjectPicker(context),
                         onClear: formState.selectedSubject != null
-                            ? () => context
-                                .read<AddTaskBloc>()
-                                .add(AddTaskSubjectCleared())
+                            ? () => context.read<AddTaskBloc>().add(
+                                AddTaskSubjectCleared(),
+                              )
                             : null,
                       ),
                     ],
@@ -231,10 +224,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: const _DateOptionsSheet(),
-      ),
+      builder: (_) =>
+          BlocProvider.value(value: bloc, child: const _DateOptionsSheet()),
     );
   }
 
@@ -259,17 +250,18 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     bloc.add(AddTaskDueTimeChanged('$h:$m'));
   }
 
-  void _showSubjectPicker(BuildContext context) {
+  void _showSubjectPicker(BuildContext context) async {
     final addTaskBloc = context.read<AddTaskBloc>();
+    // Fetch subjects directly from the repository for the sheet instead of
+    // relying on an external SubjectBloc instance.
     List<SubjectEntity> subjects = <SubjectEntity>[];
     try {
-      final subjectState = context.read<SubjectBloc>().state;
-      subjects = subjectState is SubjectLoaded
-          ? subjectState.subjects
-          : <SubjectEntity>[];
+      final repo = SubjectRepositoryImpl.create();
+      subjects = await repo.getSubjects();
     } catch (_) {
       subjects = <SubjectEntity>[];
     }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -414,8 +406,7 @@ class _SubjectPickerSheet extends StatelessWidget {
                   const Text(
                     'No subjects found. Add subjects in the Subjects tab.',
                     textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontSize: 13, color: AppColors.foreground),
+                    style: TextStyle(fontSize: 13, color: AppColors.foreground),
                   ),
                 ],
               ),
@@ -426,12 +417,12 @@ class _SubjectPickerSheet extends StatelessWidget {
                 subject: subject,
                 onTap: () {
                   context.read<AddTaskBloc>().add(
-                        AddTaskSubjectSelected(
-                          id: subject.id,
-                          name: subject.name,
-                          code: subject.code,
-                        ),
-                      );
+                    AddTaskSubjectSelected(
+                      id: subject.id,
+                      name: subject.name,
+                      code: subject.code,
+                    ),
+                  );
                   Navigator.of(context).pop();
                 },
               ),
@@ -586,9 +577,9 @@ class _DateOptionsSheet extends StatelessWidget {
             label: 'This Weekend',
             color: const Color(0xFFF59E0B),
             onTap: () {
-              context
-                  .read<AddTaskBloc>()
-                  .add(AddTaskDueDateChanged(thisWeekend));
+              context.read<AddTaskBloc>().add(
+                AddTaskDueDateChanged(thisWeekend),
+              );
               Navigator.of(context).pop();
             },
           ),
@@ -597,9 +588,9 @@ class _DateOptionsSheet extends StatelessWidget {
             label: 'Next Week',
             color: const Color(0xFF8B5CF6),
             onTap: () {
-              context
-                  .read<AddTaskBloc>()
-                  .add(AddTaskDueDateChanged(today.add(const Duration(days: 7))));
+              context.read<AddTaskBloc>().add(
+                AddTaskDueDateChanged(today.add(const Duration(days: 7))),
+              );
               Navigator.of(context).pop();
             },
           ),
@@ -630,9 +621,7 @@ class _DateOptionsSheet extends StatelessWidget {
                 ),
               );
               if (picked != null && context.mounted) {
-                context
-                    .read<AddTaskBloc>()
-                    .add(AddTaskDueDateChanged(picked));
+                context.read<AddTaskBloc>().add(AddTaskDueDateChanged(picked));
                 Navigator.of(context).pop();
               }
             },

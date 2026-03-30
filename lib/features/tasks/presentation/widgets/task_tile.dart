@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
@@ -33,7 +34,6 @@ class TaskTile extends StatelessWidget {
       } else if (diff < 0) {
         parts.add('${diff.abs()} days ago');
       } else {
-        // Format date nicely
         const months = [
           'Jan',
           'Feb',
@@ -66,6 +66,46 @@ class TaskTile extends StatelessWidget {
     }
 
     return parts.join(' · ');
+  }
+
+  void _showContextMenu(BuildContext context) {
+    final taskBloc = context.read<TaskBloc>();
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (_) => CupertinoActionSheet(
+        title: Text(task.title, style: const TextStyle(fontSize: 13)),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => BlocProvider.value(
+                  value: taskBloc,
+                  child: AddTaskSheet(initialTask: task),
+                ),
+              );
+            },
+            child: const Text('Edit'),
+          ),
+
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              taskBloc.add(TaskDeleteRequested(task.id));
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
   }
 
   void _showEditSheet(BuildContext context) {
@@ -157,15 +197,16 @@ class TaskTile extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             GestureDetector(
-              onTap: () => _showEditSheet(context),
+              onTap: () => _showContextMenu(context),
+              behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.only(left: 8),
                 child: Icon(
-                  Icons.edit_outlined,
+                  Icons.more_vert_rounded,
                   size: 16,
-                  color: AppColors.foreground.withValues(alpha: 0.45),
+                  color: AppColors.foreground.withValues(alpha: 0.8),
                 ),
               ),
             ),
