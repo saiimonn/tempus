@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/widgets/add_task_sheet.dart';
 import 'package:tempus/features/tasks/presentation/widgets/task_section.dart';
@@ -36,9 +37,9 @@ class _TasksPageState extends State<TasksPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: taskBloc,
-        child: const AddTaskSheet(),
+      builder: (_) => BlocProvider(
+        create: (_) => SubjectBloc.create()..add(SubjectLoadRequested()),
+        child: BlocProvider.value(value: taskBloc, child: const AddTaskSheet()),
       ),
     );
   }
@@ -112,12 +113,16 @@ class _TasksPageState extends State<TasksPage> {
                     ),
                   ],
                 ),
-                // Floating add button
+                
+                // Add button
                 Positioned(
                   bottom: 20,
                   right: 20,
                   child: FloatingActionButton(
                     heroTag: 'tasks_fab',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32),
+                    ),
                     onPressed: () => _showAddTaskSheet(context),
                     backgroundColor: AppColors.brandBlue,
                     elevation: 4,

@@ -4,20 +4,32 @@ import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
-import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
+import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/tasks/domain/entities/task_entity.dart';
 import 'package:tempus/features/tasks/presentation/blocs/add_task/add_task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 
 class AddTaskSheet extends StatefulWidget {
-  const AddTaskSheet({super.key});
+  final TaskEntity? initialTask;
+
+  const AddTaskSheet({super.key, this.initialTask});
+
+  bool get isEditing => initialTask != null;
 
   @override
   State<AddTaskSheet> createState() => _AddTaskSheetState();
 }
 
 class _AddTaskSheetState extends State<AddTaskSheet> {
-  final _titleController = TextEditingController();
+  late final TextEditingController _titleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: widget.initialTask?.title ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -29,19 +41,58 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
 
-    final task = TaskEntity(
-      id: 0,
-      title: title,
-      dueDate: formState.dueDate,
-      dueTime: formState.dueTime,
-      status: 'pending',
-      subId: formState.selectedSubject?.id,
-      subjectName: formState.selectedSubject?.name,
-      subjectCode: formState.selectedSubject?.code,
-    );
+    if (widget.isEditing) {
+      final updated = widget.initialTask!.copyWith(
+        title: title,
+        dueDate: formState.dueDate,
+        dueTime: formState.dueTime,
+        subId: formState.selectedSubject?.id,
+        subjectName: formState.selectedSubject?.name,
+        subjectCode: formState.selectedSubject?.code,
+      );
+      context.read<TaskBloc>().add(TaskUpdateRequested(updated));
+    } else {
+      final task = TaskEntity(
+        id: 0,
+        title: title,
+        dueDate: formState.dueDate,
+        dueTime: formState.dueTime,
+        status: 'pending',
+        subId: formState.selectedSubject?.id,
+        subjectName: formState.selectedSubject?.name,
+        subjectCode: formState.selectedSubject?.code,
+      );
+      context.read<TaskBloc>().add(TaskAddRequested(task));
+    }
 
-    context.read<TaskBloc>().add(TaskAddRequested(task));
     Navigator.of(context).pop();
+  }
+
+  AddTaskBloc _buildInitialBloc() {
+    final task = widget.initialTask;
+    if (task == null) return AddTaskBloc();
+
+    final bloc = AddTaskBloc();
+
+    if (task.dueDate != null) {
+      bloc.add(AddTaskDueDateChanged(task.dueDate!));
+    }
+    if (task.dueTime != null) {
+      bloc.add(AddTaskDueTimeChanged(task.dueTime!));
+    }
+    if (task.subId != null &&
+        task.subjectName != null &&
+        task.subjectCode != null) {
+      bloc.add(
+        AddTaskSubjectSelected(
+          id: task.subId!,
+          name: task.subjectName!,
+          code: task.subjectCode!,
+        ),
+      );
+    }
+
+    return bloc;
   }
 
   @override
@@ -49,7 +100,7 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return BlocProvider(
-      create: (_) => AddTaskBloc(),
+      create: (_) => _buildInitialBloc(),
       child: BlocBuilder<AddTaskBloc, AddTaskState>(
         builder: (context, formState) {
           return Container(
@@ -74,14 +125,47 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                     ),
                   ),
                 ),
+
+                // Header row (only shown in edit mode for clarity)
+                if (widget.isEditing) ...[
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: const Icon(
+                          Icons.close,
+                          size: 22,
+                          color: AppColors.text,
+                        ),
+                      ),
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'Edit Task',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.text,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 22),
+                    ],
+                  ),
+                  const Gap(16),
+                ],
+
                 UnderlineTextField(
-                  label: "Task",
-                  hint: "e.g. Submit Data Structure",
+                  label: 'Task',
+                  hint: 'e.g. Submit Data Structure',
                   controller: _titleController,
                   autofocus: true,
                   onFieldSubmitted: (_) => _submit(context, formState),
                 ),
+
                 const Gap(8),
+
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -94,20 +178,13 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                             : 'Date',
                         isActive: formState.dueDate != null,
                         onTap: () => _showDateOptions(context),
+                        onClear: formState.dueDate != null
+                            ? () => context.read<AddTaskBloc>().add(
+                                AddTaskDueDateCleared(),
+                              )
+                            : null,
                       ),
                       const Gap(8),
-                      // Time chip — only visible when a date is set
-                      if (formState.dueDate != null) ...[
-                        _ActionChip(
-                          icon: Icons.access_time_rounded,
-                          label: formState.dueTime != null
-                              ? _formatTime(formState.dueTime!)
-                              : 'Time',
-                          isActive: formState.dueTime != null,
-                          onTap: () => _showTimePicker(context),
-                        ),
-                        const Gap(8),
-                      ],
                       // Subject chip
                       _ActionChip(
                         icon: Icons.book_rounded,
@@ -117,44 +194,12 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
                         isActive: formState.selectedSubject != null,
                         onTap: () => _showSubjectPicker(context),
                         onClear: formState.selectedSubject != null
-                            ? () => context
-                                .read<AddTaskBloc>()
-                                .add(AddTaskSubjectCleared())
+                            ? () => context.read<AddTaskBloc>().add(
+                                AddTaskSubjectCleared(),
+                              )
                             : null,
                       ),
                     ],
-                  ),
-                ),
-                const Gap(8),
-                // Submit button aligned right
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: ListenableBuilder(
-                    listenable: _titleController,
-                    builder: (context, _) {
-                      final hasText = _titleController.text.trim().isNotEmpty;
-                      return GestureDetector(
-                        onTap: hasText ? () => _submit(context, formState) : null,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: hasText
-                                ? AppColors.brandBlue
-                                : AppColors.inputFill,
-                          ),
-                          child: Icon(
-                            Icons.arrow_upward_rounded,
-                            size: 18,
-                            color: hasText
-                                ? Colors.white
-                                : AppColors.foreground,
-                          ),
-                        ),
-                      );
-                    },
                   ),
                 ),
               ],
@@ -179,10 +224,8 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: const _DateOptionsSheet(),
-      ),
+      builder: (_) =>
+          BlocProvider.value(value: bloc, child: const _DateOptionsSheet()),
     );
   }
 
@@ -201,24 +244,21 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
         child: child!,
       ),
     );
-
     if (picked == null) return;
     final h = picked.hour.toString().padLeft(2, '0');
     final m = picked.minute.toString().padLeft(2, '0');
     bloc.add(AddTaskDueTimeChanged('$h:$m'));
   }
 
-  void _showSubjectPicker(BuildContext context) {
+  void _showSubjectPicker(BuildContext context) async {
     final addTaskBloc = context.read<AddTaskBloc>();
-
+    // Fetch subjects directly from the repository for the sheet instead of
+    // relying on an external SubjectBloc instance.
     List<SubjectEntity> subjects = <SubjectEntity>[];
     try {
-      final subjectState = context.read<SubjectBloc>().state;
-      subjects = subjectState is SubjectLoaded
-          ? subjectState.subjects
-          : <SubjectEntity>[];
+      final repo = SubjectRepositoryImpl.create();
+      subjects = await repo.getSubjects();
     } catch (_) {
-      // SubjectBloc not in scope on this route — show empty list gracefully.
       subjects = <SubjectEntity>[];
     }
 
@@ -232,10 +272,6 @@ class _AddTaskSheetState extends State<AddTaskSheet> {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Action chip
-// ---------------------------------------------------------------------------
 
 class _ActionChip extends StatelessWidget {
   final IconData icon;
@@ -308,13 +344,8 @@ class _ActionChip extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Subject picker sheet
-// ---------------------------------------------------------------------------
-
 class _SubjectPickerSheet extends StatelessWidget {
   final List<SubjectEntity> subjects;
-
   const _SubjectPickerSheet({required this.subjects});
 
   @override
@@ -386,13 +417,12 @@ class _SubjectPickerSheet extends StatelessWidget {
                 subject: subject,
                 onTap: () {
                   context.read<AddTaskBloc>().add(
-                        AddTaskSubjectSelected(
-                          // subject.id is now int — no parse needed
-                          id: subject.id,
-                          name: subject.name,
-                          code: subject.code,
-                        ),
-                      );
+                    AddTaskSubjectSelected(
+                      id: subject.id,
+                      name: subject.name,
+                      code: subject.code,
+                    ),
+                  );
                   Navigator.of(context).pop();
                 },
               ),
@@ -406,7 +436,6 @@ class _SubjectPickerSheet extends StatelessWidget {
 class _SubjectOption extends StatelessWidget {
   final SubjectEntity subject;
   final VoidCallback onTap;
-
   const _SubjectOption({required this.subject, required this.onTap});
 
   Color get _color {
@@ -472,10 +501,6 @@ class _SubjectOption extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Date options sheet
-// ---------------------------------------------------------------------------
 
 class _DateOptionsSheet extends StatelessWidget {
   const _DateOptionsSheet();
@@ -552,9 +577,9 @@ class _DateOptionsSheet extends StatelessWidget {
             label: 'This Weekend',
             color: const Color(0xFFF59E0B),
             onTap: () {
-              context
-                  .read<AddTaskBloc>()
-                  .add(AddTaskDueDateChanged(thisWeekend));
+              context.read<AddTaskBloc>().add(
+                AddTaskDueDateChanged(thisWeekend),
+              );
               Navigator.of(context).pop();
             },
           ),
@@ -564,8 +589,8 @@ class _DateOptionsSheet extends StatelessWidget {
             color: const Color(0xFF8B5CF6),
             onTap: () {
               context.read<AddTaskBloc>().add(
-                    AddTaskDueDateChanged(
-                        today.add(const Duration(days: 7))));
+                AddTaskDueDateChanged(today.add(const Duration(days: 7))),
+              );
               Navigator.of(context).pop();
             },
           ),
@@ -596,9 +621,7 @@ class _DateOptionsSheet extends StatelessWidget {
                 ),
               );
               if (picked != null && context.mounted) {
-                context
-                    .read<AddTaskBloc>()
-                    .add(AddTaskDueDateChanged(picked));
+                context.read<AddTaskBloc>().add(AddTaskDueDateChanged(picked));
                 Navigator.of(context).pop();
               }
             },

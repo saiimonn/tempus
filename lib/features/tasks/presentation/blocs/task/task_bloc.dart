@@ -21,50 +21,69 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     required DeleteTask deleteTasks,
     required UpdateTask updateTasks,
   }) : _getTasks = getTasks,
-      _addTask = addTask,
-      _deleteTask = deleteTasks,
-      _updateTask = updateTasks,
-      super(TaskInitial()) {
+       _addTask = addTask,
+       _deleteTask = deleteTasks,
+       _updateTask = updateTasks,
+       super(TaskInitial()) {
     on<TaskLoadRequested>(_onLoad);
     on<TaskAddRequested>(_onAdd);
+    on<TaskUpdateRequested>(_onUpdate);
     on<TaskToggleCompleted>(_onToggleCompleted);
     on<TaskDeleteRequested>(_onDelete);
     on<TaskSectionToggled>(_onSectionToggled);
   }
 
-  Future <void> _onLoad(
-    TaskLoadRequested event,
-    Emitter <TaskState> emit,
-  ) async {
+  Future<void> _onLoad(TaskLoadRequested event, Emitter<TaskState> emit) async {
     emit(TaskLoading());
 
     try {
       final tasks = await _getTasks();
       emit(TaskLoaded(tasks));
-    } catch(_) {
+    } catch (_) {
       emit(TaskError('Failed to load tasks'));
     }
   }
 
-  Future <void> _onAdd(
-    TaskAddRequested event,
-    Emitter <TaskState> emit,
-  ) async {
-    if(state is! TaskLoaded) return;
+  Future<void> _onAdd(TaskAddRequested event, Emitter<TaskState> emit) async {
+    if (state is! TaskLoaded) return;
 
     final curr = state as TaskLoaded;
 
     try {
       final added = await _addTask(event.task);
       emit(curr.copyWith(tasks: [...curr.tasks, added]));
-    } catch(_) {
+    } catch (_) {
       emit(TaskError('Failed to add task'));
     }
   }
 
-  Future <void> _onToggleCompleted(
+  Future<void> _onUpdate(
+    TaskUpdateRequested event,
+    Emitter<TaskState> emit,
+  ) async {
+    if (state is! TaskLoaded) return;
+    final curr = state as TaskLoaded;
+
+    final optimistic = curr.tasks
+        .map((t) => t.id == event.task.id ? event.task : t)
+        .toList();
+
+    emit(curr.copyWith(tasks: optimistic));
+
+    try {
+      final updated = await _updateTask(event.task);
+      final confirmed = curr.tasks
+          .map((t) => t.id == updated.id ? updated : t)
+          .toList();
+      emit(curr.copyWith(tasks: confirmed));
+    } catch (_) {
+      emit(curr);
+    }
+  }
+
+  Future<void> _onToggleCompleted(
     TaskToggleCompleted event,
-    Emitter <TaskState> emit,
+    Emitter<TaskState> emit,
   ) async {
     if (state is! TaskLoaded) return;
     final curr = state as TaskLoaded;
@@ -74,7 +93,9 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       status: task.isComplete ? 'pending' : 'completed',
     );
 
-    final updatedList = curr.tasks.map((t) => t.id == event.taskId ? updated : t).toList();
+    final updatedList = curr.tasks
+        .map((t) => t.id == event.taskId ? updated : t)
+        .toList();
     emit(curr.copyWith(tasks: updatedList));
 
     try {
@@ -84,9 +105,9 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     }
   }
 
-  Future <void> _onDelete(
+  Future<void> _onDelete(
     TaskDeleteRequested event,
-    Emitter <TaskState> emit,
+    Emitter<TaskState> emit,
   ) async {
     if (state is! TaskLoaded) return;
 
@@ -94,18 +115,17 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     try {
       await _deleteTask(event.taskId);
-      emit(curr.copyWith(
-        tasks: curr.tasks.where((t) => t.id != event.taskId).toList(),
-      ));
-    } catch(_) {
+      emit(
+        curr.copyWith(
+          tasks: curr.tasks.where((t) => t.id != event.taskId).toList(),
+        ),
+      );
+    } catch (_) {
       emit(TaskError('Failed to  delete task'));
     }
   }
 
-  void _onSectionToggled(
-    TaskSectionToggled event,
-    Emitter<TaskState> emit,
-  ) {
+  void _onSectionToggled(TaskSectionToggled event, Emitter<TaskState> emit) {
     if (state is! TaskLoaded) return;
 
     final curr = state as TaskLoaded;
@@ -119,5 +139,4 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
 
     emit(curr.copyWith(expandedSections: expanded));
   }
-
 }
