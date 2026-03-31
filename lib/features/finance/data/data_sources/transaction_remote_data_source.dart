@@ -1,16 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:tempus/features/finance/data/models/transaction_model.dart';
 
-/// `transactions.amount` is stored as a signed NUMERIC:
-///   positive  → income  (adds to remaining balance)
-///   negative  → expense (subtracts from remaining balance)
-///
-/// `finances.total_amount` = remaining balance.
-///   income  → total_amount increases
-///   expense → total_amount decreases
-///
-/// [TransactionModel] carries `amount` as an absolute positive double and
-/// uses `isIncome` (bool) for direction. This class converts on read/write.
 class TransactionsRemoteDataSource {
   final SupabaseClient _client;
 
@@ -81,6 +71,54 @@ class TransactionsRemoteDataSource {
         .eq('id', finances.id);
 
     final stored = (data['amount'] as num).toDouble();
+    return TransactionModel.fromMap({
+      'id': data['id'],
+      'title': data['title'],
+      'amount': stored.abs(),
+      'created_at': data['created_at'],
+      'is_income': stored >= 0,
+    });
+  }
+
+  Future<TransactionModel> updateTransaction({
+    required int id,
+    required String title,
+    required double amount,
+    required bool isIncome,
+  }) async {
+    final oldRow = await _client
+        .from('transactions')
+        .select('amount, finances_id')
+        .eq('id', id)
+        .single();
+
+    final oldSigned = (oldRow['amount'] as num).toDouble();
+    final financesId = oldRow['finances_id'] as int;
+    final newSigned = isIncome ? amount.abs() : -amount.abs();
+
+    final data = await _client
+        .from('transactions')
+        .update({'title': title, 'amount': newSigned})
+        .eq('id', id)
+        .select('id, title, amount, created_at')
+        .single();
+
+    final financesRow = await _client
+        .from('finances')
+        .select('total_amount')
+        .eq('id', financesId)
+        .single();
+
+    final currentTotal =
+        (financesRow['total_amount'] as num?)?.toDouble() ?? 0.0;
+
+    await _client
+        .from('finances')
+        .update({'total_amount': currentTotal - oldSigned + newSigned})
+        .eq('id', financesId);
+
+    final stored = (data['amount'] as num).toDouble();
+
     return TransactionModel.fromMap({
       'id': data['id'],
       'title': data['title'],

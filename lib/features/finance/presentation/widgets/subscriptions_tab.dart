@@ -40,6 +40,7 @@ class SubscriptionsTab extends StatelessWidget {
                     child: _buildSummaryCard(state),
                   ),
                 ),
+                
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -58,6 +59,7 @@ class SubscriptionsTab extends StatelessWidget {
                     ),
                   ),
                 ),
+                
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                   sliver: SliverList(
@@ -84,11 +86,15 @@ class SubscriptionsTab extends StatelessWidget {
                 ),
               ],
             ),
+            
             Positioned(
               bottom: 20,
               right: 20,
               child: FloatingActionButton(
                 heroTag: 'subscriptions_fab',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32),
+                ),
                 onPressed: () => _showAddSubscriptionSheet(context),
                 backgroundColor: AppColors.brandBlue,
                 elevation: 4,
