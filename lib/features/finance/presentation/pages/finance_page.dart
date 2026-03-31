@@ -11,14 +11,15 @@ import 'package:tempus/features/finance/data/repositories/finance_repository_imp
 import 'package:tempus/features/finance/data/repositories/subscription_repository_impl.dart';
 import 'package:tempus/features/finance/data/repositories/transaction_repository_impl.dart';
 import 'package:tempus/features/finance/domain/entities/finance_entity.dart';
-import 'package:tempus/features/finance/domain/use_cases/get_finance.dart';
-import 'package:tempus/features/finance/domain/use_cases/update_budget.dart';
-import 'package:tempus/features/finance/domain/use_cases/get_subscriptions.dart';
 import 'package:tempus/features/finance/domain/use_cases/add_subscription.dart';
-import 'package:tempus/features/finance/domain/use_cases/delete_subscription.dart';
-import 'package:tempus/features/finance/domain/use_cases/get_transactions.dart';
 import 'package:tempus/features/finance/domain/use_cases/add_transaction.dart';
+import 'package:tempus/features/finance/domain/use_cases/delete_subscription.dart';
 import 'package:tempus/features/finance/domain/use_cases/delete_transaction.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_finance.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_subscriptions.dart';
+import 'package:tempus/features/finance/domain/use_cases/get_transactions.dart';
+import 'package:tempus/features/finance/domain/use_cases/update_budget.dart';
+import 'package:tempus/features/finance/domain/use_cases/update_subscription.dart';
 import 'package:tempus/features/finance/domain/use_cases/update_transaction.dart';
 import 'package:tempus/features/finance/presentation/blocs/finance/finance_bloc.dart';
 import 'package:tempus/features/finance/presentation/blocs/subscription/subscription_bloc.dart';
@@ -33,13 +34,12 @@ class FinancePage extends StatelessWidget {
   static List<BlocProvider> createProviders() {
     final client = Supabase.instance.client;
 
-    final financeRepo = FinanceRepositoryImpl(FinanceRemoteDataSource(client));
-    final transactionRepo = TransactionRepositoryImpl(
-      TransactionsRemoteDataSource(client),
-    );
-    final subscriptionRepo = SubscriptionRepositoryImpl(
-      SubscriptionRemoteDataSource(client),
-    );
+    final financeRepo =
+        FinanceRepositoryImpl(FinanceRemoteDataSource(client));
+    final transactionRepo =
+        TransactionRepositoryImpl(TransactionsRemoteDataSource(client));
+    final subscriptionRepo =
+        SubscriptionRepositoryImpl(SubscriptionRemoteDataSource(client));
 
     return [
       BlocProvider<FinanceBloc>(
@@ -60,6 +60,7 @@ class FinancePage extends StatelessWidget {
         create: (_) => SubscriptionBloc(
           getSubscriptions: GetSubscriptions(subscriptionRepo),
           addSubscription: AddSubscription(subscriptionRepo),
+          updateSubscription: UpdateSubscription(subscriptionRepo),
           deleteSubscription: DeleteSubscription(subscriptionRepo),
         )..add(SubscriptionLoadRequested()),
       ),
@@ -70,8 +71,7 @@ class FinancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
       builder: (context, state) {
-        final bool isLoading =
-            state.status == FinanceStatus.loading ||
+        final bool isLoading = state.status == FinanceStatus.loading ||
             state.status == FinanceStatus.initial;
 
         final displayState = isLoading
@@ -117,17 +117,17 @@ class _FinanceContent extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.brandBlue,
+                    color: AppColors.text,
                   ),
                 ),
                 const Gap(12),
                 Row(
                   children: List.generate(tabs.length, (i) {
                     final isSelected = state.selectedTabIndex == i;
-
                     return GestureDetector(
-                      onTap: () =>
-                          context.read<FinanceBloc>().add(FinanceTabChanged(i)),
+                      onTap: () => context
+                          .read<FinanceBloc>()
+                          .add(FinanceTabChanged(i)),
                       child: Container(
                         margin: const EdgeInsets.only(right: 20),
                         padding: const EdgeInsets.only(bottom: 10),

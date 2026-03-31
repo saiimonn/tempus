@@ -23,5 +23,16 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }) => dataSource.addSubscription(title: title, monthlyPrice: monthlyPrice);
 
   @override
+  Future<SubscriptionEntity> updateSubscription({
+    required int id,
+    required String title,
+    required double monthlyPrice,
+  }) => dataSource.updateSubscription(
+    id: id,
+    title: title,
+    monthlyPrice: monthlyPrice,
+  );
+
+  @override
   Future<void> deleteSubscription(int id) => dataSource.deleteSubscription(id);
 }
