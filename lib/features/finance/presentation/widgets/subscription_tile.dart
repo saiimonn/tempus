@@ -65,7 +65,7 @@ class SubscriptionTile extends StatelessWidget {
       onLongPress: () => _showContextMenu(context),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
+        margin: const EdgeInsets.only(top: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
