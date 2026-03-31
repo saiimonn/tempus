@@ -3,18 +3,42 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
+import 'package:tempus/features/finance/domain/entities/transaction_entity.dart';
 import 'package:tempus/features/finance/presentation/blocs/transaction/transaction_bloc.dart';
 
-class AddTransactionSheet extends StatefulWidget {
-  const AddTransactionSheet({super.key});
+class EditTransactionSheet extends StatefulWidget {
+  final TransactionEntity transaction;
+
+  const EditTransactionSheet({super.key, required this.transaction});
 
   @override
-  State<AddTransactionSheet> createState() => _AddTransactionSheetState();
+  State<EditTransactionSheet> createState() => _EditTransactionSheetState();
 }
 
-class _AddTransactionSheetState extends State<AddTransactionSheet> {
-  final _titleController = TextEditingController();
-  final _amountController = TextEditingController();
+class _EditTransactionSheetState extends State<EditTransactionSheet> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _amountController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController = TextEditingController(text: widget.transaction.title);
+    _amountController = TextEditingController(
+      text: widget.transaction.amount % 1 == 0
+          ? widget.transaction.amount.toStringAsFixed(0)
+          : widget.transaction.amount.toStringAsFixed(2),
+    );
+    // Initialize the bloc's selected type to the transaction's current type.
+    // Use a post frame callback so the context is safe in initState.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        context.read<TransactionBloc>().add(
+          TransactionTypeChanged(widget.transaction.isIncome),
+        );
+      } catch (_) {}
+    });
+  }
 
   @override
   void dispose() {
@@ -26,12 +50,13 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
   void _confirm() {
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
-    final isIncome = context.read<TransactionBloc>().state.selectedIsIncome;
 
     if (title.isEmpty || amount == null || amount <= 0) return;
 
+    final isIncome = context.read<TransactionBloc>().state.selectedIsIncome;
     context.read<TransactionBloc>().add(
-      TransactionAddRequested(
+      TransactionUpdateRequested(
+        id: widget.transaction.id,
         title: title,
         amount: amount,
         isIncome: isIncome,
@@ -47,7 +72,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
         final isIncome = state.selectedIsIncome;
-
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -58,7 +82,6 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle bar
               Center(
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 12),
@@ -75,12 +98,17 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.close, size: 22, color: AppColors.text),
+                    child: const Icon(
+                      Icons.close,
+                      size: 22,
+                      color: AppColors.text,
+                    ),
                   ),
+
                   const Expanded(
                     child: Center(
                       child: Text(
-                        'Add Transaction',
+                        'Edit Transaction',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -89,6 +117,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       ),
                     ),
                   ),
+
                   GestureDetector(
                     onTap: _confirm,
                     child: const Icon(
@@ -112,7 +141,9 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       TransactionTypeChanged(true),
                     ),
                   ),
+
                   const Gap(10),
+
                   _TypeButton(
                     label: '- Expense',
                     isSelected: !isIncome,
@@ -127,7 +158,7 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
               const Gap(20),
 
               UnderlineTextField(
-                label: 'TITLE',
+                label: 'Title',
                 controller: _titleController,
                 hint: 'e.g. Jollibee',
                 autofocus: true,
@@ -160,9 +191,10 @@ class _AddTransactionSheetState extends State<AddTransactionSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+
                   child: const Text(
-                    'Confirm',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    'Save Changes',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -197,18 +229,12 @@ class _TypeButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.black.withValues(alpha: 0.2),
-          ),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.2)),
         ),
-        
+
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? color : AppColors.foreground,
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );

@@ -28,5 +28,18 @@ class TransactionRepositoryImpl implements TransactionRepository {
   );
 
   @override
+  Future<TransactionEntity> updateTransaction({
+    required int id,
+    required String title,
+    required double amount,
+    required bool isIncome,
+  }) => dataSource.updateTransaction(
+    id: id,
+    title: title,
+    amount: amount,
+    isIncome: isIncome,
+  );
+
+  @override
   Future<void> deleteTransaction(int id) => dataSource.deleteTransaction(id);
 }

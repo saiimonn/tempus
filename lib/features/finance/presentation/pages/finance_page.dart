@@ -19,6 +19,7 @@ import 'package:tempus/features/finance/domain/use_cases/delete_subscription.dar
 import 'package:tempus/features/finance/domain/use_cases/get_transactions.dart';
 import 'package:tempus/features/finance/domain/use_cases/add_transaction.dart';
 import 'package:tempus/features/finance/domain/use_cases/delete_transaction.dart';
+import 'package:tempus/features/finance/domain/use_cases/update_transaction.dart';
 import 'package:tempus/features/finance/presentation/blocs/finance/finance_bloc.dart';
 import 'package:tempus/features/finance/presentation/blocs/subscription/subscription_bloc.dart';
 import 'package:tempus/features/finance/presentation/blocs/transaction/transaction_bloc.dart';
@@ -51,6 +52,7 @@ class FinancePage extends StatelessWidget {
         create: (_) => TransactionBloc(
           getTransactions: GetTransactions(transactionRepo),
           addTransaction: AddTransaction(transactionRepo),
+          updateTransaction: UpdateTransaction(transactionRepo),
           deleteTransaction: DeleteTransaction(transactionRepo),
         )..add(TransactionLoadRequested()),
       ),
