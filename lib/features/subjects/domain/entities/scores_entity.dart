@@ -12,4 +12,18 @@ class ScoresEntity {
   });
 
   double get percent => maxScore > 0 ? scoreValue : 0;
+
+  ScoresEntity copyWith({
+    int? id,
+    String? title,
+    double? scoreValue,
+    double? maxScore,
+  }) {
+    return ScoresEntity(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      scoreValue: scoreValue ?? this.scoreValue,
+      maxScore: maxScore ?? this.maxScore,
+    );
+  }
 }

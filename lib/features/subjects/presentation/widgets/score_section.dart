@@ -26,14 +26,15 @@ class ScoreSection extends StatelessWidget {
   double get _average {
     if (scores.isEmpty) return 0;
     final total = scores.fold<double>(
-      0, (sum, s) => sum + (s.maxScore > 0 ? s.scoreValue / s.maxScore : 0)
+      0,
+      (sum, s) => sum + (s.maxScore > 0 ? s.scoreValue / s.maxScore : 0),
     );
     return (total / scores.length) * 100;
   }
 
   Color _averageColor(double avg) {
     if (avg >= 85) return AppColors.success;
-    if (avg >= 70) return Color(0xFFF59E0B);
+    if (avg >= 70) return const Color(0xFFF59E0B);
     return AppColors.destructive;
   }
 
@@ -62,16 +63,15 @@ class ScoreSection extends StatelessWidget {
                           color: AppColors.text,
                         ),
                       ),
-
                       if (hasScores) ...[
                         const Gap(6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 1),
                           decoration: BoxDecoration(
                             color: AppColors.foreground.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(10),
                           ),
-
                           child: Text(
                             '${scores.length}',
                             style: const TextStyle(
@@ -85,10 +85,10 @@ class ScoreSection extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 if (hasScores) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: _averageColor(avg).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
@@ -104,9 +104,9 @@ class ScoreSection extends StatelessWidget {
                   ),
                   const Gap(6),
                 ],
-
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
                     color: AppColors.brandBlue.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
@@ -120,9 +120,7 @@ class ScoreSection extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const Gap(6),
-
                 GestureDetector(
                   onTap: onAdd,
                   behavior: HitTestBehavior.opaque,
@@ -135,7 +133,6 @@ class ScoreSection extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 AnimatedRotation(
                   turns: isExpanded ? 0 : -0.25,
                   duration: const Duration(milliseconds: 200),
@@ -149,25 +146,24 @@ class ScoreSection extends StatelessWidget {
             ),
           ),
         ),
-
         AnimatedCrossFade(
           firstChild: scores.isEmpty
-            ? _buildEmpty()
-            : Column(
-              children: scores
-                .map((s) => ScoreTile(
-                  score: s,
-                  onDelete: () => onDeleteScore(s.id),
-                ))
-                .toList(),
-            ),
+              ? _buildEmpty()
+              : Column(
+                  children: scores
+                      .map((s) => ScoreTile(
+                            score: s,
+                            categoryId: category.id,
+                            onDelete: () => onDeleteScore(s.id),
+                          ))
+                      .toList(),
+                ),
           secondChild: const SizedBox.shrink(),
           crossFadeState: isExpanded
-            ? CrossFadeState.showFirst
-            : CrossFadeState.showSecond,
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
           duration: const Duration(milliseconds: 220),
         ),
-
         const Divider(height: 1, thickness: 0.5, color: Color(0xFFEEEEEE)),
       ],
     );
@@ -184,9 +180,7 @@ class ScoreSection extends StatelessWidget {
             size: 18,
             color: AppColors.foreground.withValues(alpha: 0.4),
           ),
-
           const Gap(8),
-
           Text(
             'No Scores Yet',
             style: TextStyle(

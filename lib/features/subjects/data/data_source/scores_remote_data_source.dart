@@ -16,11 +16,13 @@ class ScoresRemoteDataSource {
         .order('id', ascending: true);
 
     return (data as List<dynamic>)
-        .map((row) => GradeCategoryModel.fromMap({
-              'id': row['id'],
-              'name': row['name'],
-              'weight': (row['weight'] as num).toDouble(),
-            }))
+        .map(
+          (row) => GradeCategoryModel.fromMap({
+            'id': row['id'],
+            'name': row['name'],
+            'weight': (row['weight'] as num).toDouble(),
+          }),
+        )
         .toList();
   }
 
@@ -49,12 +51,14 @@ class ScoresRemoteDataSource {
 
     for (final row in (data as List<dynamic>)) {
       final categoryId = row['category_id'] as int;
-      grouped[categoryId]?.add(ScoreModel.fromMap({
-        'id': row['id'],
-        'title': row['title'],
-        'score_value': (row['score_value'] as num).toDouble(),
-        'max_score': (row['max_score'] as num).toDouble(),
-      }));
+      grouped[categoryId]?.add(
+        ScoreModel.fromMap({
+          'id': row['id'],
+          'title': row['title'],
+          'score_value': (row['score_value'] as num).toDouble(),
+          'max_score': (row['max_score'] as num).toDouble(),
+        }),
+      );
     }
 
     return grouped;
@@ -74,6 +78,33 @@ class ScoresRemoteDataSource {
           'score_value': scoreValue,
           'max_score': maxScore,
         })
+        .select('id, title, score_value, max_score')
+        .single();
+
+    return ScoreModel.fromMap({
+      'id': data['id'],
+      'title': data['title'],
+      'score_value': (data['score_value'] as num).toDouble(),
+      'max_score': (data['max_score'] as num).toDouble(),
+    });
+  }
+
+  Future<ScoreModel> updateScore({
+    required int scoreId,
+    required int categoryId,
+    required String title,
+    required double scoreValue,
+    required double maxScore,
+  }) async {
+    final data = await _client
+        .from('scores')
+        .update({
+          'title': title,
+          'score_value': scoreValue,
+          'max_score': maxScore,
+        })
+        .eq('id', scoreId)
+        .eq('category_id', categoryId)
         .select('id, title, score_value, max_score')
         .single();
 
