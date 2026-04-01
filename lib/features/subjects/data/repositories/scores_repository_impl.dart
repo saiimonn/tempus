@@ -34,6 +34,21 @@ class ScoresRepositoryImpl implements ScoresRepository {
   );
 
   @override
+  Future<ScoresEntity> updateScore({
+    required int scoreId,
+    required int categoryId,
+    required String title,
+    required double scoreValue,
+    required double maxScore,
+  }) => dataSource.updateScore(
+    scoreId: scoreId,
+    categoryId: categoryId,
+    title: title,
+    scoreValue: scoreValue,
+    maxScore: maxScore,
+  );
+
+  @override
   Future<void> deleteScore({required int categoryId, required int scoreId}) =>
       dataSource.deleteScore(categoryId: categoryId, scoreId: scoreId);
 }

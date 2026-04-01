@@ -26,12 +26,25 @@ class ScoresAddRequested extends ScoresEvent {
   });
 }
 
+class ScoresUpdateRequested extends ScoresEvent {
+  final int scoreId;
+  final int categoryId;
+  final String title;
+  final double scoreValue;
+  final double maxScore;
+  
+  ScoresUpdateRequested({
+    required this.scoreId,
+    required this.categoryId,
+    required this.title,
+    required this.scoreValue,
+    required this.maxScore,
+  });
+}
+
 class ScoresDeleteRequested extends ScoresEvent {
   final int categoryId;
   final int scoreId;
 
-  ScoresDeleteRequested({
-    required this.categoryId,
-    required this.scoreId,
-  });
+  ScoresDeleteRequested({required this.categoryId, required this.scoreId});
 }
