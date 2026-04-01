@@ -181,7 +181,7 @@ class _ScoresContent extends StatelessWidget {
           ],
         ),
         Positioned(
-          bottom: 20,
+          bottom: 70,
           right: 20,
           child: _AddScoreFab(
             categories: state.categories
@@ -264,6 +264,9 @@ class _AddScoreFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       heroTag: 'scores_fab',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(32),
+      ),
       onPressed: isLoading ? null : () => _handleTap(context),
       backgroundColor: AppColors.brandBlue,
       elevation: 4,

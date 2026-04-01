@@ -24,20 +24,18 @@ class _EditScoreSheetState extends State<EditScoreSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _scoreController;
-  late final TextEditingController _maxController;
+  late final TextEditingController _maxScoreController;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.score.title);
-
     _scoreController = TextEditingController(
       text: widget.score.scoreValue % 1 == 0
           ? widget.score.scoreValue.toStringAsFixed(0)
           : widget.score.scoreValue.toStringAsFixed(2),
     );
-
-    _maxController = TextEditingController(
+    _maxScoreController = TextEditingController(
       text: widget.score.maxScore % 1 == 0
           ? widget.score.maxScore.toStringAsFixed(0)
           : widget.score.maxScore.toStringAsFixed(2),
@@ -48,9 +46,164 @@ class _EditScoreSheetState extends State<EditScoreSheet> {
   void dispose() {
     _titleController.dispose();
     _scoreController.dispose();
-    _maxController.dispose();
+    _maxScoreController.dispose();
     super.dispose();
   }
-  
-  
+
+  void _confirm() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final scoreValue = double.parse(_scoreController.text.trim());
+    final maxScore = double.parse(_maxScoreController.text.trim());
+
+    if (scoreValue > maxScore) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Score cannot exceed max score'),
+          backgroundColor: AppColors.destructive,
+        ),
+      );
+      return;
+    }
+
+    context.read<ScoresBloc>().add(
+          ScoresUpdateRequested(
+            scoreId: widget.score.id,
+            categoryId: widget.categoryId,
+            title: _titleController.text.trim(),
+            scoreValue: scoreValue,
+            maxScore: maxScore,
+          ),
+        );
+
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 0, 24, 24 + bottomInset),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(Icons.close, size: 22, color: AppColors.text),
+                ),
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'Edit Score',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text,
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _confirm,
+                  child: const Icon(
+                    Icons.check,
+                    size: 22,
+                    color: AppColors.brandBlue,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(24),
+            UnderlineTextField(
+              label: 'Score Title',
+              hint: 'e.g. Quiz 1',
+              controller: _titleController,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const Gap(16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: UnderlineTextField(
+                    label: 'Score',
+                    hint: 'e.g. 38',
+                    controller: _scoreController,
+                    isDecimal: true,
+                    textInputAction: TextInputAction.next,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (double.tryParse(v.trim()) == null) return 'Invalid';
+                      return null;
+                    },
+                  ),
+                ),
+                const Gap(12),
+                Expanded(
+                  child: UnderlineTextField(
+                    label: 'Max Score',
+                    hint: 'e.g. 40',
+                    controller: _maxScoreController,
+                    isDecimal: true,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _confirm(),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      final d = double.tryParse(v.trim());
+                      if (d == null || d <= 0) return 'Invalid';
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const Gap(28),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _confirm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brandBlue,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Save Changes',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

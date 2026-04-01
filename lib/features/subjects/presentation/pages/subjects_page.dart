@@ -14,6 +14,7 @@ import 'package:tempus/features/subjects/domain/use_cases/delete_grade_category.
 import 'package:tempus/features/subjects/domain/use_cases/delete_score.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_scores.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_subject_detail.dart';
+import 'package:tempus/features/subjects/domain/use_cases/update_score.dart';
 import 'package:tempus/features/subjects/presentation/bloc/scores/scores_bloc.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
@@ -122,7 +123,6 @@ class _SubjectCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Grade ring placeholder — populated by SubjectDetailBloc
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -156,19 +156,20 @@ class _SubjectCard extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => BlocProvider<ScoresBloc>(
-                        create: (_) {
-                          final repo = ScoresRepositoryImpl(
-                            ScoresRemoteDataSource(client),
-                          );
-                          return ScoresBloc(
+                      builder: (_) {
+                        final repo = ScoresRepositoryImpl(
+                          ScoresRemoteDataSource(client),
+                        );
+                        return BlocProvider<ScoresBloc>(
+                          create: (_) => ScoresBloc(
                             getScores: GetScores(repo),
                             addScore: AddScore(repo),
+                            updateScore: UpdateScore(repo),
                             deleteScore: DeleteScore(repo),
-                          )..add(ScoresLoadRequested(subject.id));
-                        },
-                        child: ScoresPage(subject: subject),
-                      ),
+                          )..add(ScoresLoadRequested(subject.id)),
+                          child: ScoresPage(subject: subject),
+                        );
+                      },
                     ),
                   ),
                   child: const Text(
@@ -274,7 +275,6 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // id=0 is a sentinel — the remote DB assigns the real id.
     final newSubject = SubjectEntity(
       id: 0,
       name: _nameController.text.trim(),

@@ -87,6 +87,7 @@ class CategorySection extends StatelessWidget {
               ...scores.map(
                 (score) => ScoreTile(
                   score: score,
+                  categoryId: category.id,
                   onDelete: () => onDeleteScore(score.id),
                 ),
               ),
