@@ -2,10 +2,16 @@ import 'package:tempus/features/subjects/domain/entities/subject_detail_entity.d
 import 'package:tempus/features/subjects/domain/entities/grade_category_entity.dart';
 
 abstract class SubjectDetailRepository {
-  Future <SubjectDetailEntity> getSubjectDetail(dynamic subjectId);
-  
-  Future <GradeCategoryEntity> addGradeCategory({
+  Future<SubjectDetailEntity> getSubjectDetail(dynamic subjectId);
+
+  Future<GradeCategoryEntity> addGradeCategory({
     required dynamic subjectId,
+    required String name,
+    required double weight,
+  });
+
+  Future<GradeCategoryEntity> updateGradeCategory({
+    required int categoryId,
     required String name,
     required double weight,
   });

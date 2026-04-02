@@ -58,6 +58,25 @@ class SubjectDetailRemoteDataSource {
     });
   }
 
+  Future<GradeCategoryModel> updateCategory({
+    required int categoryId,
+    required String name,
+    required double weight,
+  }) async {
+    final data = await _client
+        .from('grade_category')
+        .update({'name': name, 'weight': weight})
+        .eq('id', categoryId)
+        .select('id, name, weight')
+        .single();
+
+    return GradeCategoryModel.fromMap({
+      'id': data['id'],
+      'name': data['name'],
+      'weight': (data['weight'] as num).toDouble(),
+    });
+  }
+
   Future<void> deleteCategory({
     required int subjectId,
     required int categoryId,

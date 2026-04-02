@@ -26,4 +26,16 @@ class SubjectRepositoryImpl implements SubjectRepository {
     );
     return dataSource.addSubject(model);
   }
+
+  @override
+  Future<SubjectEntity> updateSubject(SubjectEntity subject) {
+    final model = SubjectModel(
+      id: subject.id,
+      name: subject.name,
+      code: subject.code,
+      instructor: subject.instructor,
+      units: subject.units,
+    );
+    return dataSource.updateSubject(model);
+  }
 }

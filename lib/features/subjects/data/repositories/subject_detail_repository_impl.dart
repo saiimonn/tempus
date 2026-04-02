@@ -46,6 +46,19 @@ class SubjectDetailRepositoryImpl implements SubjectDetailRepository {
   }
 
   @override
+  Future<GradeCategoryEntity> updateGradeCategory({
+    required int categoryId,
+    required String name,
+    required double weight,
+  }) {
+    return dataSource.updateCategory(
+      categoryId: categoryId,
+      name: name,
+      weight: weight,
+    );
+  }
+
+  @override
   Future<void> deleteGradeCategory({
     required dynamic subjectId,
     required int categoryId,

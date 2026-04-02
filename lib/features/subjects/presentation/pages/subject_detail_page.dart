@@ -8,10 +8,8 @@ import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
 import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/category_tile.dart';
+import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 
-// ---------------------------------------------------------------------------
-// Fake skeleton data — no longer needs estimatedGrade constructor arg
-// ---------------------------------------------------------------------------
 final _fakeDetail = SubjectDetailEntity(
   subject: const SubjectEntity(
     id: 0,
@@ -69,17 +67,18 @@ class SubjectDetailPage extends StatelessWidget {
             ),
           ),
           body: switch (state) {
-            SubjectDetailError(:final message) =>
-              Center(child: Text(message)),
+            SubjectDetailError(:final message) => Center(child: Text(message)),
             _ => Skeletonizer(
               enabled:
-                  state is SubjectDetailInitial || state is SubjectDetailLoading,
+                  state is SubjectDetailInitial ||
+                  state is SubjectDetailLoading,
               child: _SubjectDetailContent(
                 detail: state is SubjectDetailLoaded
                     ? state.detail
                     : _fakeDetail,
                 isLoading:
-                    state is SubjectDetailInitial || state is SubjectDetailLoading,
+                    state is SubjectDetailInitial ||
+                    state is SubjectDetailLoading,
               ),
             ),
           },
@@ -93,10 +92,7 @@ class _SubjectDetailContent extends StatelessWidget {
   final SubjectDetailEntity detail;
   final bool isLoading;
 
-  const _SubjectDetailContent({
-    required this.detail,
-    this.isLoading = false,
-  });
+  const _SubjectDetailContent({required this.detail, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -127,8 +123,8 @@ class _SubjectDetailContent extends StatelessWidget {
               onDelete: () {
                 if (isLoading) return;
                 context.read<SubjectDetailBloc>().add(
-                      SubjectDetailCategoryDeleteRequested(cat.id),
-                    );
+                  SubjectDetailCategoryDeleteRequested(cat.id),
+                );
               },
             ),
           ),
@@ -289,15 +285,17 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.blueAccent.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-            color: AppColors.brandBlue.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.brandBlue.withValues(alpha: 0.5)),
       ),
       child: const Row(
         children: [
           Expanded(
             flex: 1,
-            child: Icon(Icons.info_outline,
-                color: AppColors.brandBlue, size: 20),
+            child: Icon(
+              Icons.info_outline,
+              color: AppColors.brandBlue,
+              size: 20,
+            ),
           ),
           Expanded(
             flex: 4,
@@ -329,16 +327,15 @@ class _WeightInfoCard extends StatelessWidget {
     final dotColor = isOver100
         ? AppColors.destructive
         : isExact100
-            ? const Color(0xFF0E9F6E)
-            : const Color(0xFFF59E0B);
+        ? const Color(0xFF0E9F6E)
+        : const Color(0xFFF59E0B);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: AppColors.inputFill.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
@@ -379,14 +376,19 @@ class _WeightInfoCard extends StatelessWidget {
             const Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.error_outline,
-                    size: 16, color: AppColors.destructive),
+                Icon(
+                  Icons.error_outline,
+                  size: 16,
+                  color: AppColors.destructive,
+                ),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Total weight exceeds 100%. Please adjust category weights.',
-                    style:
-                        TextStyle(fontSize: 12, color: AppColors.destructive),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.destructive,
+                    ),
                   ),
                 ),
               ],
@@ -396,8 +398,11 @@ class _WeightInfoCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.warning_amber_outlined,
-                    size: 14, color: AppColors.destructive),
+                const Icon(
+                  Icons.warning_amber_outlined,
+                  size: 14,
+                  color: AppColors.destructive,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Missing ${(totalWeight - 100).abs().toStringAsFixed(0)}% to reach full allocation',
