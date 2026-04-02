@@ -48,4 +48,27 @@ class SubjectRemoteDataSource {
       'units': data['units'],
     });
   }
+
+  Future<SubjectModel> updateSubject(SubjectModel subject) async {
+    final data = await _client
+        .from('subject')
+        .update({
+          'name': subject.name,
+          'code': subject.code,
+          'prof': subject.instructor.isNotEmpty ? subject.instructor : null,
+          'units': subject.units,
+        })
+        .eq('id', subject.id)
+        .eq('user_id', _userId)
+        .select('id, name, code, prof, units')
+        .single();
+
+    return SubjectModel.fromMap({
+      'id': data['id'],
+      'name': data['name'],
+      'code': data['code'],
+      'instructor': data['prof'] ?? '',
+      'units': data['units'],
+    });
+  }
 }

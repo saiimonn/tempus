@@ -5,8 +5,10 @@ import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/data/data_source/scores_remote_data_source.dart';
 import 'package:tempus/features/subjects/data/data_source/subject_detail_remote_data_source.dart';
+import 'package:tempus/features/subjects/data/data_source/subject_remote_data_source.dart';
 import 'package:tempus/features/subjects/data/repositories/scores_repository_impl.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_detail_repository_impl.dart';
+import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_grade_category.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_score.dart';
@@ -14,7 +16,9 @@ import 'package:tempus/features/subjects/domain/use_cases/delete_grade_category.
 import 'package:tempus/features/subjects/domain/use_cases/delete_score.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_scores.dart';
 import 'package:tempus/features/subjects/domain/use_cases/get_subject_detail.dart';
+import 'package:tempus/features/subjects/domain/use_cases/update_grade_category.dart';
 import 'package:tempus/features/subjects/domain/use_cases/update_score.dart';
+import 'package:tempus/features/subjects/domain/use_cases/update_subject.dart';
 import 'package:tempus/features/subjects/presentation/bloc/scores/scores_bloc.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject/subject_bloc.dart';
 import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subject_detail_bloc.dart';
@@ -182,14 +186,21 @@ class _SubjectCard extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BlocProvider<SubjectDetailBloc>(
                         create: (_) {
-                          final repo = SubjectDetailRepositoryImpl(
+                          final detailRepo = SubjectDetailRepositoryImpl(
                             SubjectDetailRemoteDataSource(client),
                             ScoresRemoteDataSource(client),
                           );
+                          final subjectRepo = SubjectRepositoryImpl(
+                            SubjectRemoteDataSource(client),
+                          );
                           return SubjectDetailBloc(
-                            getSubjectDetail: GetSubjectDetail(repo),
-                            addGradeCategory: AddGradeCategory(repo),
-                            deleteGradeCategory: DeleteGradeCategory(repo),
+                            getSubjectDetail: GetSubjectDetail(detailRepo),
+                            addGradeCategory: AddGradeCategory(detailRepo),
+                            updateGradeCategory:
+                                UpdateGradeCategory(detailRepo),
+                            deleteGradeCategory:
+                                DeleteGradeCategory(detailRepo),
+                            updateSubject: UpdateSubject(subjectRepo),
                           )..add(SubjectDetailLoadRequested(subject.id));
                         },
                         child: SubjectDetailPage(subject: subject),
@@ -253,7 +264,8 @@ class _AddSubjectBottomSheet extends StatefulWidget {
   const _AddSubjectBottomSheet();
 
   @override
-  State<_AddSubjectBottomSheet> createState() => _AddSubjectBottomSheetState();
+  State<_AddSubjectBottomSheet> createState() =>
+      _AddSubjectBottomSheetState();
 }
 
 class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
