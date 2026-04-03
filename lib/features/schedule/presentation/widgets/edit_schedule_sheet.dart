@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
@@ -16,21 +17,70 @@ const _dayAbbr = {
   'Sunday': 'Sun',
 };
 
-class AddScheduleSheet extends StatelessWidget {
+class EditScheduleSheet extends StatelessWidget {
+  final ScheduleEntryEntity entry;
   final List<ScheduleSubjectEntity> subjects;
 
-  const AddScheduleSheet({super.key, required this.subjects});
+  const EditScheduleSheet({
+    super.key,
+    required this.entry,
+    required this.subjects,
+  });
+
+  /// Looks up the subject by id. Uses an explicit cast so the compiler always
+  /// sees [ScheduleSubjectEntity] as the return type, avoiding the runtime
+  /// "is not a subtype of ScheduleSubjectModel" error that arises when the
+  /// list contains concrete [ScheduleSubjectModel] objects.
+  ScheduleSubjectEntity _findSubject() {
+    final List<ScheduleSubjectEntity> typed = subjects
+        .cast<ScheduleSubjectEntity>();
+    for (final s in typed) {
+      if (s.id == entry.subId) return s;
+    }
+    // Fallback: synthesise a pure-entity so the sheet still opens.
+    return ScheduleSubjectEntity(
+      id: entry.subId,
+      name: entry.subjectName,
+      code: entry.subjectCode,
+    );
+  }
+
+  AddScheduleState _buildInitialState() {
+    final subject = _findSubject();
+
+    final startParts = entry.startTime.split(':');
+    final endParts = entry.endTime.split(':');
+
+    return AddScheduleState(
+      selectedSubject: subject,
+      selectedDays: Set<String>.from(entry.days),
+      startTime: TimeOfDay(
+        hour: int.parse(startParts[0]),
+        minute: int.parse(startParts[1]),
+      ),
+      endTime: TimeOfDay(
+        hour: int.parse(endParts[0]),
+        minute: int.parse(endParts[1]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _AddScheduleSheetBody(subjects: subjects);
+    return BlocProvider(
+      create: (_) => AddScheduleBloc(initialState: _buildInitialState()),
+      child: _EditScheduleSheetBody(entry: entry, subjects: subjects),
+    );
   }
 }
 
-class _AddScheduleSheetBody extends StatelessWidget {
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EditScheduleSheetBody extends StatelessWidget {
+  final ScheduleEntryEntity entry;
   final List<ScheduleSubjectEntity> subjects;
 
-  const _AddScheduleSheetBody({required this.subjects});
+  const _EditScheduleSheetBody({required this.entry, required this.subjects});
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +97,7 @@ class _AddScheduleSheetBody extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Handle bar
             Center(
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 12),
@@ -59,16 +110,21 @@ class _AddScheduleSheetBody extends StatelessWidget {
               ),
             ),
 
+            // Header
             Row(
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, size: 22, color: AppColors.text),
+                  child: const Icon(
+                    Icons.close,
+                    size: 22,
+                    color: AppColors.text,
+                  ),
                 ),
                 const Expanded(
                   child: Center(
                     child: Text(
-                      'Add Schedule',
+                      'Edit Schedule',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -83,7 +139,7 @@ class _AddScheduleSheetBody extends StatelessWidget {
 
             const Gap(24),
 
-            _buildLabel('Subjects'),
+            _buildLabel('Subject'),
             const Gap(8),
             subjects.isEmpty
                 ? const _NoSubjectsHint()
@@ -92,16 +148,18 @@ class _AddScheduleSheetBody extends StatelessWidget {
             const Gap(16),
 
             _buildLabel('Days'),
-            _DayChips(),
+            const Gap(8),
+            const _DayChips(),
 
             const Gap(16),
 
             _buildLabel('Time'),
-            _TimeRow(),
+            const Gap(8),
+            const _TimeRow(),
 
             const Gap(28),
 
-            _ConfirmButton(),
+            _ConfirmButton(entryId: entry.id),
           ],
         ),
       ),
@@ -109,13 +167,38 @@ class _AddScheduleSheetBody extends StatelessWidget {
   }
 
   Widget _buildLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.text,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: AppColors.text,
+    ),
+  );
+}
+
+// ─── Sub-widgets ─────────────────────────────────────────────────────────────
+
+class _NoSubjectsHint extends StatelessWidget {
+  const _NoSubjectsHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, size: 20, color: AppColors.foreground),
+          Gap(8),
+          Expanded(
+            child: Text(
+              'No subjects yet. Add subjects first in the Subjects tab.',
+              style: TextStyle(fontSize: 12, color: AppColors.foreground),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SubjectDropdown extends StatelessWidget {
@@ -123,13 +206,23 @@ class _SubjectDropdown extends StatelessWidget {
 
   const _SubjectDropdown({required this.subjects});
 
+  /// Same safe lookup used in the sheet root — avoids the ScheduleSubjectModel
+  /// subtype mismatch at runtime.
+  ScheduleSubjectEntity? _resolve(ScheduleSubjectEntity? selected) {
+    if (selected == null) return null;
+    final typed = subjects.cast<ScheduleSubjectEntity>();
+    for (final s in typed) {
+      if (s.id == selected.id) return s;
+    }
+    return selected;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
-      buildWhen: (prev, curr) =>
-          prev.selectedSubject != curr.selectedSubject,
+      buildWhen: (prev, curr) => prev.selectedSubject != curr.selectedSubject,
       builder: (context, state) {
-        final selected = state.selectedSubject;
+        final resolvedValue = _resolve(state.selectedSubject);
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
@@ -137,15 +230,25 @@ class _SubjectDropdown extends StatelessWidget {
             color: AppColors.background,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected != null
+              color: resolvedValue != null
                   ? AppColors.brandBlue
                   : AppColors.inputFill,
-              width: selected != null ? 2 : 1,
+              width: resolvedValue != null ? 2 : 1,
             ),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<ScheduleSubjectEntity>(
-              value: selected,
+              // Ensure the Dropdown's `value` is either null or one of the items.
+              // If `resolvedValue` isn't present in `subjects` (e.g. a synthesized
+              // subject for an entry that references a deleted subject), set the
+              // value to null to avoid the DropdownButton "Bad state" error.
+              value:
+                  resolvedValue != null &&
+                      subjects.cast<ScheduleSubjectEntity>().any(
+                        (s) => s.id == resolvedValue.id,
+                      )
+                  ? resolvedValue
+                  : null,
               isExpanded: true,
               hint: const Text(
                 'Select a Subject',
@@ -158,7 +261,9 @@ class _SubjectDropdown extends StatelessWidget {
               style: const TextStyle(color: AppColors.text, fontSize: 15),
               dropdownColor: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              items: subjects.map((subject) {
+              // Cast each item so the DropdownMenuItem type parameter is
+              // ScheduleSubjectEntity, not ScheduleSubjectModel.
+              items: subjects.cast<ScheduleSubjectEntity>().map((subject) {
                 return DropdownMenuItem<ScheduleSubjectEntity>(
                   value: subject,
                   child: Row(
@@ -203,35 +308,15 @@ class _SubjectDropdown extends StatelessWidget {
               }).toList(),
               onChanged: (subject) {
                 if (subject != null) {
-                  context
-                      .read<AddScheduleBloc>()
-                      .add(AddScheduleSubjectSelected(subject));
+                  context.read<AddScheduleBloc>().add(
+                    AddScheduleSubjectSelected(subject),
+                  );
                 }
               },
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _NoSubjectsHint extends StatelessWidget {
-  const _NoSubjectsHint();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: Column(
-        children: [
-          Icon(Icons.info_outline, size: 24, color: AppColors.foreground),
-          Text(
-            'No subjects yet. Add subjects first in the Subjects tab.',
-            style: TextStyle(fontSize: 12, color: AppColors.foreground),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -249,15 +334,16 @@ class _DayChips extends StatelessWidget {
           runSpacing: 8,
           children: scheduleDays.map((day) {
             final isSelected = state.selectedDays.contains(day);
-
             return GestureDetector(
-              onTap: () => context
-                  .read<AddScheduleBloc>()
-                  .add(AddScheduleDayToggled(day)),
+              onTap: () => context.read<AddScheduleBloc>().add(
+                AddScheduleDayToggled(day),
+              ),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.brandBlue
@@ -274,8 +360,7 @@ class _DayChips extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color:
-                        isSelected ? Colors.white : AppColors.foreground,
+                    color: isSelected ? Colors.white : AppColors.foreground,
                   ),
                 ),
               ),
@@ -305,8 +390,8 @@ class _TimeRow extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(
             primary: AppColors.brandBlue,
             onPrimary: Colors.white,
@@ -318,9 +403,7 @@ class _TimeRow extends StatelessWidget {
 
     if (picked == null || !context.mounted) return;
 
-    final bloc = context.read<AddScheduleBloc>();
-
-    bloc.add(
+    context.read<AddScheduleBloc>().add(
       isStart
           ? AddScheduleStartTimeChanged(picked)
           : AddScheduleEndTimeChanged(picked),
@@ -339,11 +422,8 @@ class _TimeRow extends StatelessWidget {
               child: _TimeButton(
                 label: 'Start',
                 displayValue: _fmtDisplay(state.startTime),
-                onTap: () => _pickTime(
-                  context,
-                  isStart: true,
-                  initial: state.startTime,
-                ),
+                onTap: () =>
+                    _pickTime(context, isStart: true, initial: state.startTime),
               ),
             ),
             const Padding(
@@ -354,11 +434,8 @@ class _TimeRow extends StatelessWidget {
               child: _TimeButton(
                 label: 'End',
                 displayValue: _fmtDisplay(state.endTime),
-                onTap: () => _pickTime(
-                  context,
-                  isStart: false,
-                  initial: state.endTime,
-                ),
+                onTap: () =>
+                    _pickTime(context, isStart: false, initial: state.endTime),
               ),
             ),
           ],
@@ -384,7 +461,7 @@ class _TimeButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(12),
@@ -418,7 +495,8 @@ class _TimeButton extends StatelessWidget {
 }
 
 class _ConfirmButton extends StatelessWidget {
-  const _ConfirmButton();
+  final int entryId;
+  const _ConfirmButton({required this.entryId});
 
   @override
   Widget build(BuildContext context) {
@@ -428,11 +506,12 @@ class _ConfirmButton extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: state.isValid ? () => _confirm(context) : null,
+            onPressed: state.isValid ? () => _confirm(context, state) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.brandBlue,
-              disabledBackgroundColor:
-                  AppColors.brandBlue.withValues(alpha: 0.5),
+              disabledBackgroundColor: AppColors.brandBlue.withValues(
+                alpha: 0.5,
+              ),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -440,12 +519,8 @@ class _ConfirmButton extends StatelessWidget {
               ),
             ),
             child: const Text(
-              'Confirm',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
-              ),
+              'Save Changes',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         );
@@ -453,22 +528,21 @@ class _ConfirmButton extends StatelessWidget {
     );
   }
 
-  void _confirm(BuildContext context) {
-    final bloc = context.read<AddScheduleBloc>();
-    final state = bloc.state;
-
+  void _confirm(BuildContext context, AddScheduleState state) {
     final subject = state.selectedSubject!;
 
     context.read<ScheduleBloc>().add(
-          ScheduleEntryAddRequested(
-            subId: subject.id,
-            subjectName: subject.name,
-            subjectCode: subject.code,
-            days: state.selectedDays.toList(),
-            startTime: state.startTimeStr,
-            endTime: state.endTimeStr,
-          ),
-        );
+      ScheduleEntryUpdateRequested(
+        entryId: entryId,
+        subId: subject.id,
+        subjectName: subject.name,
+        subjectCode: subject.code,
+        days: state.selectedDays.toList(),
+        startTime: state.startTimeStr,
+        endTime: state.endTimeStr,
+      ),
+    );
+
     Navigator.of(context).pop();
   }
 }

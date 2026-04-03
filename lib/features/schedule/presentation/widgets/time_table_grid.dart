@@ -1,9 +1,13 @@
 import 'dart:math' as math;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
+import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
+import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
+import 'package:tempus/features/schedule/presentation/widgets/edit_schedule_sheet.dart';
 
 class TimetableGrid extends StatelessWidget {
   final ScheduleLoaded state;
@@ -232,6 +236,60 @@ class _DayTimeline extends StatelessWidget {
     }).toList();
   }
 
+  void _showContextMenu(
+    BuildContext context,
+    ScheduleEntryEntity entry,
+    List<ScheduleSubjectEntity> subjects,
+  ) {
+    final scheduleBloc = context.read<ScheduleBloc>();
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (_) => CupertinoActionSheet(
+        title: Text(
+          entry.subjectName,
+          style: const TextStyle(fontSize: 13),
+        ),
+        message: Text(
+          '${entry.subjectCode}  •  ${_fmtTime(entry.startTime)} – ${_fmtTime(entry.endTime)}',
+          style: const TextStyle(fontSize: 12),
+        ),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.of(context).pop();
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => BlocProvider.value(
+                  value: scheduleBloc,
+                  child: EditScheduleSheet(
+                    entry: entry,
+                    subjects: subjects,
+                  ),
+                ),
+              );
+            },
+            child: const Text('Edit'),
+          ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.of(context).pop();
+              scheduleBloc.add(ScheduleEntryDeleteRequested(entry.id));
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final entries = state.entriesForSelectedDay;
@@ -353,40 +411,48 @@ class _DayTimeline extends StatelessWidget {
                               left: left,
                               width: width,
                               height: p.height - 2,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: p.color,
-                                  borderRadius: BorderRadius.circular(6),
+                              child: GestureDetector(
+                                onLongPress: () => _showContextMenu(
+                                  context,
+                                  p.entry,
+                                  state.subjects,
                                 ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 7,
-                                  vertical: 5,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      p.entry.subjectCode,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: tc,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (p.height > 38)
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: p.color,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 5,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        '${p.startLabel} – ${p.endLabel}',
+                                        p.entry.subjectCode,
                                         style: TextStyle(
-                                          fontSize: 10,
-                                          color: tc.withValues(alpha: 0.85),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: tc,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                  ],
+                                      if (p.height > 38)
+                                        Text(
+                                          '${p.startLabel} – ${p.endLabel}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color:
+                                                tc.withValues(alpha: 0.85),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
