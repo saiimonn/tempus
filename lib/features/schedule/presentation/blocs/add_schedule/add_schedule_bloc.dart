@@ -18,7 +18,7 @@ const scheduleDays = [
 
 class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
   AddScheduleBloc({AddScheduleState? initialState})
-      : super(initialState ?? const AddScheduleState()) {
+    : super(initialState ?? const AddScheduleState()) {
     on<AddScheduleSubjectSelected>(_onSubjectSelected);
     on<AddScheduleDayToggled>(_onDayToggled);
     on<AddScheduleStartTimeChanged>(_onStartTimeChanged);
@@ -42,6 +42,12 @@ class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
     } else {
       updated.add(event.day);
     }
+
+    final ordered = scheduleDays.where(updated.contains).toList();
+    print(
+      'AddScheduleBloc._onDayToggled: toggled=${event.day}, selectedDays=$ordered',
+    );
+
     emit(state.copyWith(selectedDays: updated));
   }
 

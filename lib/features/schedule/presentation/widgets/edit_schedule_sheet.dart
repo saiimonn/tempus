@@ -501,7 +501,12 @@ class _ConfirmButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
-      buildWhen: (prev, curr) => prev.isValid != curr.isValid,
+      buildWhen: (prev, curr) =>
+          prev.isValid != curr.isValid ||
+          prev.selectedDays != curr.selectedDays ||
+          prev.startTime != curr.startTime ||
+          prev.endTime != curr.endTime ||
+          prev.selectedSubject != curr.selectedSubject,
       builder: (context, state) {
         return SizedBox(
           width: double.infinity,
@@ -531,13 +536,20 @@ class _ConfirmButton extends StatelessWidget {
   void _confirm(BuildContext context, AddScheduleState state) {
     final subject = state.selectedSubject!;
 
+    final orderedDays = scheduleDays
+        .where(state.selectedDays.contains)
+        .toList();
+    print(
+      'EditScheduleSheet._confirm: entryId=$entryId selectedDaysRaw=${state.selectedDays.toList()} orderedDays=$orderedDays start=${state.startTimeStr} end=${state.endTimeStr}',
+    );
+
     context.read<ScheduleBloc>().add(
       ScheduleEntryUpdateRequested(
         entryId: entryId,
         subId: subject.id,
         subjectName: subject.name,
         subjectCode: subject.code,
-        days: state.selectedDays.toList(),
+        days: orderedDays,
         startTime: state.startTimeStr,
         endTime: state.endTimeStr,
       ),

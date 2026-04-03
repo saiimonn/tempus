@@ -128,7 +128,23 @@ class ScheduleBloc extends Bloc<ScheduleEvent, ScheduleState> {
           .map((e) => e.id == event.entryId ? updated : e)
           .toList();
 
-      emit(curr.copyWith(entries: confirmed));
+      // After successfully updating on the server, refresh the full schedule
+      // from the backend so the UI reflects the canonical DB state (grouping,
+      // generated ids, and any server-side normalization).
+      try {
+        final result = await _loadSchedule();
+        emit(
+          ScheduleLoaded(
+            subjects: result.subjects,
+            entries: result.entries,
+            selectedDayIndex: curr.selectedDayIndex,
+          ),
+        );
+      } catch (_) {
+        // If reload fails for any reason, fall back to the optimistic confirmed
+        // state so the UI still reflects the update immediately.
+        emit(curr.copyWith(entries: confirmed));
+      }
     } catch (_) {
       emit(curr);
     }
