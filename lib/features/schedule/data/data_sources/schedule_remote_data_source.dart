@@ -82,14 +82,17 @@ class ScheduleRemoteDataSource {
     }
 
     const dayOrder = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
 
     return grouped.values.map((g) {
-      g.days.sort(
-        (a, b) => dayOrder.indexOf(a).compareTo(dayOrder.indexOf(b)),
-      );
+      g.days.sort((a, b) => dayOrder.indexOf(a).compareTo(dayOrder.indexOf(b)));
       return ScheduleEntryModel(
         id: g.id,
         subId: g.subId,
@@ -116,12 +119,72 @@ class ScheduleRemoteDataSource {
         .from('schedule')
         .insert(
           days
-              .map((day) => {
-                    'sub_id': subId,
-                    'day': day,
-                    'start_time': startTime,
-                    'end_time': endTime,
-                  })
+              .map(
+                (day) => {
+                  'sub_id': subId,
+                  'day': day,
+                  'start_time': startTime,
+                  'end_time': endTime,
+                },
+              )
+              .toList(),
+        )
+        .select('id');
+
+    final firstId = (rows as List<dynamic>).first['id'] as int;
+
+    return ScheduleEntryModel(
+      id: firstId,
+      subId: subId,
+      subjectName: subjectName,
+      subjectCode: subjectCode,
+      days: List<String>.from(days),
+      startTime: startTime,
+      endTime: endTime,
+    );
+  }
+
+  Future<ScheduleEntryModel> updateEntry({
+    required int entryId,
+    required int subId,
+    required String subjectName,
+    required String subjectCode,
+    required List<String> days,
+    required String startTime,
+    required String endTime,
+  }) async {
+    assert(days.isNotEmpty, 'days must not be empty');
+
+    final seed = await _client
+        .from('schedule')
+        .select('sub_id, start_time, end_time')
+        .eq('id', entryId)
+        .single();
+
+    final oldSubId = seed['sub_id'] as int;
+    final oldStart = seed['start_time'] as String;
+    final oldEnd = seed['end_time'] as String;
+
+    await _client
+        .from('schedule')
+        .update({'is_deleted': true})
+        .eq('sub_id', oldSubId)
+        .eq('start_time', oldStart)
+        .eq('end_time', oldEnd)
+        .eq('is_deleted', false);
+
+    final rows = await _client
+        .from('schedule')
+        .insert(
+          days
+              .map(
+                (day) => {
+                  'sub_id': subId,
+                  'day': day,
+                  'start_time': startTime,
+                  'end_time': endTime,
+                },
+              )
               .toList(),
         )
         .select('id');
@@ -159,8 +222,7 @@ class ScheduleRemoteDataSource {
         .eq('is_deleted', false);
   }
 
-  String _trimTime(String raw) =>
-      raw.length >= 5 ? raw.substring(0, 5) : raw;
+  String _trimTime(String raw) => raw.length >= 5 ? raw.substring(0, 5) : raw;
 }
 
 class _GroupedEntry {
