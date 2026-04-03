@@ -24,6 +24,26 @@ class ScheduleEntryAddRequested extends ScheduleEvent {
   });
 }
 
+class ScheduleEntryUpdateRequested extends ScheduleEvent {
+  final int entryId;
+  final int subId;
+  final String subjectName;
+  final String subjectCode;
+  final List<String> days;
+  final String startTime;
+  final String endTime;
+
+  ScheduleEntryUpdateRequested({
+    required this.entryId,
+    required this.subId,
+    required this.subjectName,
+    required this.subjectCode,
+    required this.days,
+    required this.startTime,
+    required this.endTime,
+  });
+}
+
 class ScheduleEntryDeleteRequested extends ScheduleEvent {
   final int entryId;
   ScheduleEntryDeleteRequested(this.entryId);

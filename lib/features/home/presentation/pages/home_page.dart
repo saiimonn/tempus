@@ -16,10 +16,10 @@ import 'package:tempus/features/home/presentation/widgets/home_schedule_card.dar
 import 'package:tempus/features/home/presentation/widgets/home_task_card.dart';
 import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:tempus/features/profile/presentation/pages/profile_page.dart';
-import 'package:tempus/features/schedule/data/data_sources/schedule_remote_data_source.dart';
 import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
+import 'package:tempus/features/schedule/domain/use_cases/update_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
 import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
@@ -39,11 +39,6 @@ import 'package:tempus/features/tasks/domain/use_cases/get_tasks.dart';
 import 'package:tempus/features/tasks/domain/use_cases/update_task.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
-import 'package:tempus/features/schedule/data/repositories/schedule_repository_impl.dart';
-import 'package:tempus/features/schedule/domain/use_cases/add_schedule_entry.dart';
-import 'package:tempus/features/schedule/domain/use_cases/delete_schedule_entry.dart';
-import 'package:tempus/features/schedule/domain/use_cases/load_schedule.dart';
-import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
 
 final _fakeSummary = HomeSummaryEntity(
   todayTasks: List.generate(
@@ -181,6 +176,7 @@ class _HomePageState extends State<HomePage> {
                 addScheduleEntry: AddScheduleEntry(
                   ScheduleRepositoryImpl.create(),
                 ),
+                updateScheduleEntry: UpdateScheduleEntry(ScheduleRepositoryImpl.create()),
                 deleteScheduleEntry: DeleteScheduleEntry(
                   ScheduleRepositoryImpl.create(),
                 ),

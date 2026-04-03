@@ -17,7 +17,8 @@ const scheduleDays = [
 ];
 
 class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
-  AddScheduleBloc() : super(const AddScheduleState()) {
+  AddScheduleBloc({AddScheduleState? initialState})
+    : super(initialState ?? const AddScheduleState()) {
     on<AddScheduleSubjectSelected>(_onSubjectSelected);
     on<AddScheduleDayToggled>(_onDayToggled);
     on<AddScheduleStartTimeChanged>(_onStartTimeChanged);
@@ -26,27 +27,33 @@ class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
 
   void _onSubjectSelected(
     AddScheduleSubjectSelected event,
-    Emitter <AddScheduleState> emit,
+    Emitter<AddScheduleState> emit,
   ) {
     emit(state.copyWith(selectedSubject: event.subject));
   }
 
   void _onDayToggled(
     AddScheduleDayToggled event,
-    Emitter <AddScheduleState> emit,
+    Emitter<AddScheduleState> emit,
   ) {
     final updated = Set<String>.from(state.selectedDays);
-    if(updated.contains(event.day)) {
+    if (updated.contains(event.day)) {
       updated.remove(event.day);
     } else {
       updated.add(event.day);
     }
+
+    final ordered = scheduleDays.where(updated.contains).toList();
+    print(
+      'AddScheduleBloc._onDayToggled: toggled=${event.day}, selectedDays=$ordered',
+    );
+
     emit(state.copyWith(selectedDays: updated));
   }
 
   void _onStartTimeChanged(
     AddScheduleStartTimeChanged event,
-    Emitter <AddScheduleState> emit,
+    Emitter<AddScheduleState> emit,
   ) {
     final picked = event.time;
     final startMins = picked.hour * 60 + picked.minute;
@@ -59,18 +66,13 @@ class AddScheduleBloc extends Bloc<AddScheduleEvent, AddScheduleState> {
       newEnd = TimeOfDay(hour: (bumped ~/ 60) % 24, minute: bumped % 60);
     }
 
-    final next = state.copyWith(startTime: picked, endTime: newEnd);
-
-    emit(next);
+    emit(state.copyWith(startTime: picked, endTime: newEnd));
   }
 
   void _onEndTimeChanged(
     AddScheduleEndTimeChanged event,
-    Emitter <AddScheduleState> emit,
+    Emitter<AddScheduleState> emit,
   ) {
-    final picked = event.time;
-    final next = state.copyWith(endTime: picked);
-
-    emit(next);
+    emit(state.copyWith(endTime: event.time));
   }
 }

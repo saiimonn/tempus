@@ -37,5 +37,24 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   );
 
   @override
+  Future<ScheduleEntryEntity> updateEntry({
+    required int entryId,
+    required int subId,
+    required String subjectName,
+    required String subjectCode,
+    required List<String> days,
+    required String startTime,
+    required String endTime,
+  }) => dataSource.updateEntry(
+    entryId: entryId,
+    subId: subId,
+    subjectName: subjectName,
+    subjectCode: subjectCode,
+    days: days,
+    startTime: startTime,
+    endTime: endTime,
+  );
+
+  @override
   Future<void> deleteEntry(int entryId) => dataSource.deleteEntry(entryId);
 }
