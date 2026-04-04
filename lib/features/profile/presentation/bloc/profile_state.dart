@@ -1,6 +1,6 @@
 part of 'profile_bloc.dart';
 
-enum ProfileStatus { initial, loading, loaded, error, signingOut, signedOut }
+enum ProfileStatus { initial, loading, loaded, error, signingOut, signedOut, updating, updated }
 
 class ProfileState extends Equatable {
   final ProfileStatus status;
