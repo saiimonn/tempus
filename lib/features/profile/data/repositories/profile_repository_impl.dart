@@ -11,5 +11,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<ProfileEntity> getProfile() => _dataSource.getProfile();
 
   @override
+  Future<ProfileEntity> updateProfile({
+    required String fullName,
+    required String course,
+    required String yearLevel,
+  }) => _dataSource.updateProfile(
+    fullName: fullName,
+    course: course,
+    yearLevel: yearLevel,
+  );
+
+  @override
   Future<void> signOut() => _dataSource.signOut();
 }
