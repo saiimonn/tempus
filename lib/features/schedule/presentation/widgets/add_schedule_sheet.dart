@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
+import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
 import 'package:tempus/features/schedule/presentation/blocs/add_schedule/add_schedule_bloc.dart';
 import 'package:tempus/features/schedule/presentation/blocs/schedule/schedule_bloc.dart';
@@ -63,7 +64,11 @@ class _AddScheduleSheetBody extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, size: 22, color: AppColors.text),
+                  child: const Icon(
+                    Icons.close,
+                    size: 22,
+                    color: AppColors.text,
+                  ),
                 ),
                 const Expanded(
                   child: Center(
@@ -109,13 +114,13 @@ class _AddScheduleSheetBody extends StatelessWidget {
   }
 
   Widget _buildLabel(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.text,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: AppColors.text,
+    ),
+  );
 }
 
 class _SubjectDropdown extends StatelessWidget {
@@ -126,92 +131,85 @@ class _SubjectDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
-      buildWhen: (prev, curr) =>
-          prev.selectedSubject != curr.selectedSubject,
+      buildWhen: (prev, curr) => prev.selectedSubject != curr.selectedSubject,
       builder: (context, state) {
         final selected = state.selectedSubject;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected != null
-                  ? AppColors.brandBlue
-                  : AppColors.inputFill,
-              width: selected != null ? 2 : 1,
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<ScheduleSubjectEntity>(
-              value: selected,
-              isExpanded: true,
-              hint: const Text(
-                'Select a Subject',
-                style: TextStyle(color: AppColors.foreground, fontSize: 14),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Subjects',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.foreground,
+                letterSpacing: 0.5,
               ),
+            ),
+
+            DropdownButtonFormField<ScheduleSubjectEntity>(
+              value: selected,
               icon: const Icon(
                 Icons.keyboard_arrow_down_rounded,
                 color: AppColors.foreground,
+                size: 20,
               ),
-              style: const TextStyle(color: AppColors.text, fontSize: 15),
+
+              decoration: InputDecoration(
+                filled: false,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                isDense: true,
+                border: _underlineBorder(Colors.grey.shade300),
+                enabledBorder: _underlineBorder(Colors.grey.shade300),
+                focusedBorder: _underlineBorder(
+                  AppColors.brandBlue,
+                  width: 1.5,
+                ),
+              ),
+
+              hint: const Text(
+                'Select a Subject',
+                style: TextStyle(
+                  color: AppColors.foreground,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+
               dropdownColor: Colors.white,
               borderRadius: BorderRadius.circular(12),
               items: subjects.map((subject) {
                 return DropdownMenuItem<ScheduleSubjectEntity>(
                   value: subject,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.brandBlue,
-                        ),
-                      ),
-                      const Gap(10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              subject.code,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.text,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              subject.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: AppColors.text,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '${subject.code} - ${subject.name}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.text,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 );
               }).toList(),
               onChanged: (subject) {
                 if (subject != null) {
-                  context
-                      .read<AddScheduleBloc>()
-                      .add(AddScheduleSubjectSelected(subject));
+                  context.read<AddScheduleBloc>().add(
+                    AddScheduleSubjectSelected(subject),
+                  );
                 }
               },
             ),
-          ),
+          ],
         );
       },
+    );
+  }
+
+  UnderlineInputBorder _underlineBorder(Color color, {double width = 1.0}) {
+    return UnderlineInputBorder(
+      borderSide: BorderSide(color: color, width: width),
     );
   }
 }
@@ -251,13 +249,15 @@ class _DayChips extends StatelessWidget {
             final isSelected = state.selectedDays.contains(day);
 
             return GestureDetector(
-              onTap: () => context
-                  .read<AddScheduleBloc>()
-                  .add(AddScheduleDayToggled(day)),
+              onTap: () => context.read<AddScheduleBloc>().add(
+                AddScheduleDayToggled(day),
+              ),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.brandBlue
@@ -274,8 +274,7 @@ class _DayChips extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color:
-                        isSelected ? Colors.white : AppColors.foreground,
+                    color: isSelected ? Colors.white : AppColors.foreground,
                   ),
                 ),
               ),
@@ -339,11 +338,8 @@ class _TimeRow extends StatelessWidget {
               child: _TimeButton(
                 label: 'Start',
                 displayValue: _fmtDisplay(state.startTime),
-                onTap: () => _pickTime(
-                  context,
-                  isStart: true,
-                  initial: state.startTime,
-                ),
+                onTap: () =>
+                    _pickTime(context, isStart: true, initial: state.startTime),
               ),
             ),
             const Padding(
@@ -354,11 +350,8 @@ class _TimeRow extends StatelessWidget {
               child: _TimeButton(
                 label: 'End',
                 displayValue: _fmtDisplay(state.endTime),
-                onTap: () => _pickTime(
-                  context,
-                  isStart: false,
-                  initial: state.endTime,
-                ),
+                onTap: () =>
+                    _pickTime(context, isStart: false, initial: state.endTime),
               ),
             ),
           ],
@@ -431,8 +424,9 @@ class _ConfirmButton extends StatelessWidget {
             onPressed: state.isValid ? () => _confirm(context) : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.brandBlue,
-              disabledBackgroundColor:
-                  AppColors.brandBlue.withValues(alpha: 0.5),
+              disabledBackgroundColor: AppColors.brandBlue.withValues(
+                alpha: 0.5,
+              ),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -460,15 +454,15 @@ class _ConfirmButton extends StatelessWidget {
     final subject = state.selectedSubject!;
 
     context.read<ScheduleBloc>().add(
-          ScheduleEntryAddRequested(
-            subId: subject.id,
-            subjectName: subject.name,
-            subjectCode: subject.code,
-            days: state.selectedDays.toList(),
-            startTime: state.startTimeStr,
-            endTime: state.endTimeStr,
-          ),
-        );
+      ScheduleEntryAddRequested(
+        subId: subject.id,
+        subjectName: subject.name,
+        subjectCode: subject.code,
+        days: state.selectedDays.toList(),
+        startTime: state.startTimeStr,
+        endTime: state.endTimeStr,
+      ),
+    );
     Navigator.of(context).pop();
   }
 }
