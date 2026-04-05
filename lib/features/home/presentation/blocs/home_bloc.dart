@@ -73,9 +73,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               });
       final finance = results[2] as FinanceEntity;
 
-      final todayTasks = tasks
-          .where((t) => !t.isComplete && _isToday(t.dueDate, now))
-          .toList();
+      final todayTasks = tasks.where((t) => _isToday(t.dueDate, now)).toList();
 
       final todaySchedule =
           schedule.entries.where((e) => e.days.contains(todayDayName)).toList()
@@ -91,7 +89,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           ),
         ),
       );
-      
     } catch (_) {
       emit(
         state.copyWith(
