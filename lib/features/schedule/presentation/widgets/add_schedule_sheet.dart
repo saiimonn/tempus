@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
@@ -289,69 +290,40 @@ class _DayChips extends StatelessWidget {
 class _TimeRow extends StatelessWidget {
   const _TimeRow();
 
-  String _fmtDisplay(TimeOfDay t) {
-    final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final min = t.minute.toString().padLeft(2, '0');
-    final period = t.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$min $period';
-  }
-
-  Future<void> _pickTime(
-    BuildContext context, {
-    required bool isStart,
-    required TimeOfDay initial,
-  }) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.brandBlue,
-            onPrimary: Colors.white,
-          ),
-        ),
-        child: child!,
-      ),
-    );
-
-    if (picked == null || !context.mounted) return;
-
-    final bloc = context.read<AddScheduleBloc>();
-
-    bloc.add(
-      isStart
-          ? AddScheduleStartTimeChanged(picked)
-          : AddScheduleEndTimeChanged(picked),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AddScheduleBloc, AddScheduleState>(
       buildWhen: (prev, curr) =>
-          prev.startTime != curr.startTime || prev.endTime != curr.endTime,
+          prev.startTime != curr.startTime || prev.endTime != curr.startTime,
       builder: (context, state) {
         return Row(
           children: [
             Expanded(
-              child: _TimeButton(
+              child: _TimeTextField(
                 label: 'Start',
-                displayValue: _fmtDisplay(state.startTime),
-                onTap: () =>
-                    _pickTime(context, isStart: true, initial: state.startTime),
+                initialValue: state.startTimeStr,
+                onChanged: (time) => context
+                  .read<AddScheduleBloc>()
+                  .add(AddScheduleStartTimeChanged(time)),
               ),
             ),
+            
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Icon(Icons.arrow_forward, size: 16, color: AppColors.text),
+              child: Icon(
+                Icons.arrow_forward,
+                size: 16,
+                color: AppColors.text,
+              ),
             ),
+            
             Expanded(
-              child: _TimeButton(
+              child: _TimeTextField(
                 label: 'End',
-                displayValue: _fmtDisplay(state.endTime),
-                onTap: () =>
-                    _pickTime(context, isStart: false, initial: state.endTime),
+                initialValue: state.endTimeStr,
+                onChanged: (time) => context
+                  .read<AddScheduleBloc>()
+                  .add(AddScheduleEndTimeChanged(time)),
               ),
             ),
           ],
@@ -361,51 +333,119 @@ class _TimeRow extends StatelessWidget {
   }
 }
 
-class _TimeButton extends StatelessWidget {
+class _TimeTextField extends StatefulWidget {
   final String label;
-  final String displayValue;
-  final VoidCallback onTap;
-
-  const _TimeButton({
+  final String initialValue;
+  final void Function(TimeOfDay) onChanged;
+  
+  const _TimeTextField({
     required this.label,
-    required this.displayValue,
-    required this.onTap,
+    required this.initialValue,
+    required this.onChanged,
   });
+  
+  @override
+  State<_TimeTextField> createState() => _TimeTextFieldState();
+}
 
+class _TimeTextFieldState extends State<_TimeTextField> {
+  late final TextEditingController _controller;
+  bool _hasError = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  void _onChanged(String value) {
+    if (value.length == 2 && !value.contains(':')) {
+      _controller.text = '$value:';
+      _controller.selection = TextSelection.collapsed(offset: 3);
+      value = _controller.text;
+    }
+    
+    TimeOfDay? _parseTime(String value) {
+      final parts = value.split(':');
+      if(parts.length != 2) return null;
+      final h = int.tryParse(parts[0]);
+      final m = int.tryParse(parts[1]);
+      if (h == null || m == null) return null;
+      if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+      return TimeOfDay(hour: h, minute: m);
+    }
+    
+    final parsed = _parseTime(value);
+    if(parsed != null) {
+      setState(() => _hasError = false);
+      widget.onChanged(parsed);
+    } else {
+      setState(() => _hasError = value.length >= 4);
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.inputFill),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.foreground,
+          ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+        
+        const Gap(4),
+        
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _hasError
+                ? AppColors.destructive
+                : AppColors.inputFill,
+            ),
+          ),
+          
+          child: TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\d:]')),
+              LengthLimitingTextInputFormatter(5),
+            ],
+            
+            onChanged: _onChanged,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.text,
+            ),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+              hintText: '00:00',
+              hintStyle: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
                 color: AppColors.foreground,
               ),
             ),
-            const Gap(2),
-            Text(
-              displayValue,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.text,
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
