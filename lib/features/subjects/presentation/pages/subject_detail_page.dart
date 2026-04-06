@@ -11,9 +11,6 @@ import 'package:tempus/features/subjects/presentation/bloc/subject_detail/subjec
 import 'package:tempus/features/subjects/presentation/widgets/add_category_sheet.dart';
 import 'package:tempus/features/subjects/presentation/widgets/category_tile.dart';
 
-// ---------------------------------------------------------------------------
-// Fake skeleton data
-// ---------------------------------------------------------------------------
 final _fakeDetail = SubjectDetailEntity(
   subject: const SubjectEntity(
     id: 0,
@@ -352,7 +349,7 @@ class _ViewContent extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        _EstimatedGradeCard(grade: detail.estimatedGrade),
+        _EstimatedGradeCard(detail: detail),
         const Gap(20),
         const Text(
           'Active Categories',
@@ -659,6 +656,8 @@ class _EditField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
+  final TextInputAction textInputAction;
+  final bool autofocus;
   final bool isLast;
 
   const _EditField({
@@ -669,6 +668,8 @@ class _EditField extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
+    this.textInputAction = TextInputAction.next,
+    this.autofocus = false,
     this.isLast = false,
   });
 
@@ -694,6 +695,8 @@ class _EditField extends StatelessWidget {
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
             textCapitalization: textCapitalization,
+            textInputAction: textInputAction,
+            autofocus: autofocus,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -906,58 +909,114 @@ class _WeightSummaryBar extends StatelessWidget {
 }
 
 class _EstimatedGradeCard extends StatelessWidget {
-  final double grade;
-  const _EstimatedGradeCard({required this.grade});
+  final SubjectDetailEntity detail;
 
-  Color get _gradeColor {
-    if (grade >= 90) return AppColors.success;
-    if (grade >= 75) return const Color(0xFFF59E0B);
-    return AppColors.destructive;
+  const _EstimatedGradeCard({required this.detail});
+
+  Color _gradeColor(double grade) {
+    if (grade == 0.0) return AppColors.foreground; // no data
+    if (grade <= 2.0) return AppColors.success;
+    if (grade <= 3.0) return const Color(0xFFF59E0B);
+    return AppColors.destructive; // 5.0 failing
   }
 
-  String get _gradeLabel {
-    if (grade == 0) return '--';
-    return '${grade.toStringAsFixed(1)}%';
+  String _gradeLabel(double grade) {
+    if (grade == 0.0) return '--';
+    return grade.toStringAsFixed(2);
+  }
+
+  String _gradeRemark(double grade) {
+    if (grade == 0.0) return 'Add scores to see your estimate';
+    if (grade <= 1.50) return 'Excellent';
+    if (grade <= 2.00) return 'Very Good';
+    if (grade <= 2.50) return 'Good';
+    if (grade <= 3.00) return 'Passing';
+    return 'Failed';
   }
 
   @override
   Widget build(BuildContext context) {
+    final grade = detail.estimatedGrade;
+    final pct = detail.estimatedPercent;
+    final color = _gradeColor(grade);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border:
             Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          const Text(
-            'Current Estimated Grade',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.text,
-              fontWeight: FontWeight.w700,
+          // Ring indicator
+          SizedBox(
+            width: 80,
+            height: 80,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Text(
+                  _gradeLabel(grade),
+                  style: TextStyle(
+                    fontSize: grade == 0.0 ? 14 : 20,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Gap(6),
-          Text(
-            _gradeLabel,
-            style: TextStyle(
-              fontSize: 42,
-              fontWeight: FontWeight.bold,
-              color: grade == 0 ? AppColors.foreground : _gradeColor,
+
+          const Gap(20),
+
+          // Labels
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Estimated Grade',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.foreground,
+                  ),
+                ),
+                const Gap(4),
+                Text(
+                  _gradeRemark(grade),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: grade == 0.0 ? AppColors.foreground : color,
+                  ),
+                ),
+                if (grade != 0.0) ...[
+                  const Gap(4),
+                  Text(
+                    '${pct.toStringAsFixed(1)}% weighted average',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.foreground,
+                    ),
+                  ),
+                ],
+                if (grade == 0.0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Add scores to see your estimate',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (grade == 0)
-            const Padding(
-              padding: EdgeInsets.only(top: 4),
-              child: Text(
-                'Add scores to see your estimate',
-                style:
-                    TextStyle(fontSize: 12, color: AppColors.foreground),
-              ),
-            ),
         ],
       ),
     );
@@ -1006,8 +1065,9 @@ class _InfoCard extends StatelessWidget {
           Expanded(
             flex: 4,
             child: Text(
-              'Your grades will be calculated using the weighted average method. '
-              'Ensure all categories\' weights account for 100% of your total grade.',
+              'Grades use the Philippine university scale (1.0–5.0). '
+              '1.0 is the highest, 3.0 is the minimum passing grade, '
+              'and 5.0 is failing. Ensure all category weights total 100%.',
               style:
                   TextStyle(fontSize: 12, color: AppColors.brandBlue),
             ),

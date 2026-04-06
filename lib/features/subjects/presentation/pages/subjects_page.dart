@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/core/widgets/underline_text_field.dart';
 import 'package:tempus/features/subjects/data/data_source/scores_remote_data_source.dart';
@@ -9,6 +10,7 @@ import 'package:tempus/features/subjects/data/data_source/subject_remote_data_so
 import 'package:tempus/features/subjects/data/repositories/scores_repository_impl.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_detail_repository_impl.dart';
 import 'package:tempus/features/subjects/data/repositories/subject_repository_impl.dart';
+import 'package:tempus/features/subjects/domain/entities/subject_detail_entity.dart';
 import 'package:tempus/features/subjects/domain/entities/subject_entity.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_grade_category.dart';
 import 'package:tempus/features/subjects/domain/use_cases/add_score.dart';
@@ -75,14 +77,68 @@ class SubjectsPage extends StatelessWidget {
   }
 }
 
-class _SubjectCard extends StatelessWidget {
+class _SubjectCard extends StatefulWidget {
   final SubjectEntity subject;
 
   const _SubjectCard({required this.subject});
 
   @override
+  State<_SubjectCard> createState() => _SubjectCardState();
+}
+
+class _SubjectCardState extends State<_SubjectCard> {
+  double? _estimatedGrade; // PH grade (1.0–5.0), null = loading
+  double _gradePercent = 0; // raw % for the ring indicator
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGrade();
+  }
+
+  Future<void> _loadGrade() async {
+    try {
+      final client = Supabase.instance.client;
+      final repo = SubjectDetailRepositoryImpl(
+        SubjectDetailRemoteDataSource(client),
+        ScoresRemoteDataSource(client),
+      );
+      final detail = await repo.getSubjectDetail(widget.subject.id);
+      if (mounted) {
+        setState(() {
+          _estimatedGrade = detail.estimatedGrade;
+          _gradePercent = detail.estimatedPercent;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _estimatedGrade = 0.0);
+    }
+  }
+
+  Color _gradeColor(double grade) {
+    if (grade == 0.0) return AppColors.foreground; // no data
+    if (grade <= 2.0) return AppColors.success;
+    if (grade <= 3.0) return const Color(0xFFF59E0B);
+    return AppColors.destructive; // 5.0 failing
+  }
+
+  double _ringValue(double grade) {
+    if (grade == 0.0) return 0.0;
+    // grade range 1.0–5.0 → invert so 1.0 → 1.0, 5.0 → 0.0
+    return ((5.0 - grade) / 4.0).clamp(0.0, 1.0);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final client = Supabase.instance.client;
+    final grade = _estimatedGrade;
+    final gradeColor = grade != null
+        ? _gradeColor(grade)
+        : AppColors.foreground;
+    final ringVal = grade != null ? _ringValue(grade) : 0.0;
+    final gradeLabel = (grade == null)
+        ? '...'
+        : (grade == 0.0 ? '--' : grade.toStringAsFixed(2));
 
     return Card(
       color: Colors.white,
@@ -97,63 +153,93 @@ class _SubjectCard extends StatelessWidget {
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subject.code,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.brandBlue,
-                        fontWeight: FontWeight.w500,
+                // Subject info — Expanded so long names wrap instead of overflow
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.subject.code,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: AppColors.brandBlue,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    Text(
-                      subject.name,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: AppColors.text,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        widget.subject.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: AppColors.text,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        // Wrap gracefully instead of overflowing
+                        softWrap: true,
                       ),
-                    ),
-                    Text(
-                      '${subject.units} units',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.foreground,
+
+                      Row(
+                        children: [
+                          Text(
+                            '${widget.subject.units} units',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          
+                          const Gap(6),
+                          
+                          Text(
+                            '•',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          
+                          const Gap(6),
+                          
+                          Text(
+                            widget.subject.instructor,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.foreground,
+                            )
+                          )
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(
-                        value: 0,
-                        strokeWidth: 6,
-                        color: AppColors.brandBlue,
-                        backgroundColor: Colors.grey.shade200,
+
+                const SizedBox(width: 12),
+
+                // Grade ring
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        gradeLabel,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: gradeColor,
+                        ),
                       ),
-                    ),
-                    const Text(
-                      '--%',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        color: AppColors.foreground,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
             Divider(color: Colors.grey.withAlpha(80), height: 1),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -170,8 +256,8 @@ class _SubjectCard extends StatelessWidget {
                             addScore: AddScore(repo),
                             updateScore: UpdateScore(repo),
                             deleteScore: DeleteScore(repo),
-                          )..add(ScoresLoadRequested(subject.id)),
-                          child: ScoresPage(subject: subject),
+                          )..add(ScoresLoadRequested(widget.subject.id)),
+                          child: ScoresPage(subject: widget.subject),
                         );
                       },
                     ),
@@ -196,19 +282,21 @@ class _SubjectCard extends StatelessWidget {
                           return SubjectDetailBloc(
                             getSubjectDetail: GetSubjectDetail(detailRepo),
                             addGradeCategory: AddGradeCategory(detailRepo),
-                            updateGradeCategory:
-                                UpdateGradeCategory(detailRepo),
-                            deleteGradeCategory:
-                                DeleteGradeCategory(detailRepo),
+                            updateGradeCategory: UpdateGradeCategory(
+                              detailRepo,
+                            ),
+                            deleteGradeCategory: DeleteGradeCategory(
+                              detailRepo,
+                            ),
                             updateSubject: UpdateSubject(subjectRepo),
-                          )..add(SubjectDetailLoadRequested(subject.id));
+                          )..add(SubjectDetailLoadRequested(widget.subject.id));
                         },
-                        child: SubjectDetailPage(subject: subject),
+                        child: SubjectDetailPage(subject: widget.subject),
                       ),
                     ),
                   ),
                   child: const Text(
-                    'Manage Grading',
+                    'Subject Details',
                     style: TextStyle(color: AppColors.brandBlue),
                   ),
                 ),
@@ -264,8 +352,7 @@ class _AddSubjectBottomSheet extends StatefulWidget {
   const _AddSubjectBottomSheet();
 
   @override
-  State<_AddSubjectBottomSheet> createState() =>
-      _AddSubjectBottomSheetState();
+  State<_AddSubjectBottomSheet> createState() => _AddSubjectBottomSheetState();
 }
 
 class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
@@ -342,8 +429,7 @@ class _AddSubjectBottomSheetState extends State<_AddSubjectBottomSheet> {
                   label: "Subject Name",
                   hint: "e.g. Data Structures and Algorithms",
                   controller: _nameController,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? "Required" : null,
+                  validator: (v) => v == null || v.isEmpty ? "Required" : null,
                 ),
                 const SizedBox(height: 16),
                 UnderlineTextField(
