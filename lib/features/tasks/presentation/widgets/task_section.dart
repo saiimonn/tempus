@@ -11,6 +11,7 @@ class TaskSection extends StatelessWidget {
   final VoidCallback onToggle;
   final bool showAddButton;
   final VoidCallback? onAdd;
+  final Color? accentColor;
 
   const TaskSection({
     super.key,
@@ -20,10 +21,17 @@ class TaskSection extends StatelessWidget {
     required this.onToggle,
     this.showAddButton = false,
     this.onAdd,
+    this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final titleColor = accentColor ?? AppColors.text;
+    final badgeColor = accentColor != null
+        ? accentColor!.withValues(alpha: 0.12)
+        : AppColors.foreground.withValues(alpha: 0.12);
+    final badgeTextColor = accentColor ?? AppColors.foreground;
+
     return Column(
       children: [
         InkWell(
@@ -33,30 +41,41 @@ class TaskSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
+                if (accentColor != null) ...[
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 15,
+                    color: accentColor,
+                  ),
+                  const Gap(4),
+                ],
+
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.text,
+                    color: titleColor,
                   ),
                 ),
 
                 if (tasks.isNotEmpty) ...[
                   const Gap(6),
-
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.foreground.withValues(alpha: 0.12),
+                      color: badgeColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${tasks.length}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.foreground,
+                        color: badgeTextColor,
                       ),
                     ),
                   ),
@@ -64,11 +83,9 @@ class TaskSection extends StatelessWidget {
 
                 const Spacer(),
 
-                if(showAddButton && onAdd != null)
+                if (showAddButton && onAdd != null)
                   GestureDetector(
-                    onTap: () {
-                      onAdd!();
-                    },
+                    onTap: onAdd,
                     behavior: HitTestBehavior.opaque,
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
@@ -96,17 +113,17 @@ class TaskSection extends StatelessWidget {
 
         AnimatedCrossFade(
           firstChild: tasks.isEmpty
-            ? _buildEmpty()
-            : Column(
-              children: tasks
-                .map((task) => TaskTile(task: task))
-                .toList(),
-            ),
+              ? _buildEmpty()
+              : Column(
+                  children: tasks.map((task) => TaskTile(task: task)).toList(),
+                ),
           secondChild: const SizedBox.shrink(),
-          crossFadeState: isExpanded 
-            ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          crossFadeState: isExpanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
           duration: const Duration(milliseconds: 220),
         ),
+
         const Divider(height: 1, thickness: 0.5, color: Color(0xFFEEEEEE)),
       ],
     );
@@ -123,9 +140,7 @@ class TaskSection extends StatelessWidget {
             size: 18,
             color: AppColors.foreground.withValues(alpha: 0.4),
           ),
-
           const Gap(8),
-
           Text(
             'No entries found',
             style: TextStyle(

@@ -189,9 +189,10 @@ class TaskTile extends StatelessWidget {
                   if (_subtitleText.isNotEmpty)
                     Text(
                       _subtitleText,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.foreground,
+                        color: (task.isPastDue && !task.isComplete) ? 
+                        AppColors.destructive.withValues(alpha: 0.75) : AppColors.foreground,
                       ),
                     ),
                 ],

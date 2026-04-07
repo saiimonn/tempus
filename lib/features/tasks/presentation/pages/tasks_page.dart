@@ -83,6 +83,14 @@ class _TasksPageState extends State<TasksPage> {
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           TaskSection(
+                            title: 'Past Due',
+                            tasks: state.pastDueTasks,
+                            isExpanded: _expandedSections.contains('Past Due'),
+                            onToggle: () => _toggleSection('Past Due'),
+                            accentColor: AppColors.destructive,
+                          ),
+                          
+                          TaskSection(
                             title: 'Today',
                             tasks: state.todayTasks,
                             isExpanded: _expandedSections.contains('Today'),
