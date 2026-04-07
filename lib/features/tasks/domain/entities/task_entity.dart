@@ -26,9 +26,9 @@ class TaskEntity {
 
     final now = DateTime.now();
 
-    return dueDate!.year == now.year && 
-      dueDate!.month == now.month &&
-      dueDate!.day == now.day;
+    return dueDate!.year == now.year &&
+        dueDate!.month == now.month &&
+        dueDate!.day == now.day;
   }
 
   bool get isUpcoming {
@@ -38,6 +38,15 @@ class TaskEntity {
     final today = DateTime(now.year, now.month, now.day);
     final taskDay = DateTime(dueDate!.year, dueDate!.month, dueDate!.day);
     return taskDay.isAfter(today);
+  }
+
+  bool get isPastDue {
+    if (dueDate == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final taskDay = DateTime(dueDate!.year, dueDate!.month, dueDate!.day);
+    return taskDay.isBefore(today);
   }
 
   bool get hasNoDue => dueDate == null;
