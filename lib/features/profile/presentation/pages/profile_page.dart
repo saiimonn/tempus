@@ -6,6 +6,7 @@ import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/auth/presentation/pages/login_page.dart';
 import 'package:tempus/features/profile/domain/entities/profile_entity.dart';
 import 'package:tempus/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:tempus/features/profile/presentation/pages/faq_page.dart';
 import 'package:tempus/features/profile/presentation/widgets/info_card.dart';
 import 'package:tempus/features/profile/presentation/widgets/profile_header.dart';
 import 'package:tempus/features/profile/presentation/widgets/section_card.dart';
@@ -264,7 +265,9 @@ class _ViewContent extends StatelessWidget {
                   MenuItem(
                     icon: Icons.help_outline_rounded,
                     label: 'Help & FAQ',
-                    onTap: () {},
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const FaqPage()),
+                    ),
                   ),
                   MenuItem(
                     icon: Icons.privacy_tip_outlined,
