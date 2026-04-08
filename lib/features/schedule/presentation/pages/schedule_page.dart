@@ -40,7 +40,7 @@ class SchedulePage extends StatelessWidget {
         }
 
         if (state is ScheduleError) {
-          return Center(child: Text((state).message));
+          return Center(child: Text(state.message));
         }
 
         if (state is ScheduleLoaded) {
@@ -60,41 +60,36 @@ class _ScheduleContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Class Schedule',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.text,
-                  ),
+    // The outer Column fills the Scaffold body.
+    // Title + timetable header are fixed; only the timeline rows scroll.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Page title + Add button — never scrolls away
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Class Schedule',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
                 ),
-                AddButton(subjects: state.subjects),
-              ],
-            ),
+              ),
+              AddButton(subjects: state.subjects),
+            ],
           ),
         ),
 
-        if (state.entries.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: EmptySchedule(subjects: state.subjects),
-          )
-        else ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TimetableGrid(state: state),
-            ),
-          ),
-        ],
+        // Timetable or empty — expands to fill the rest of the screen
+        Expanded(
+          child: state.entries.isEmpty
+              ? EmptySchedule(subjects: state.subjects)
+              : TimetableGrid(state: state),
+        ),
       ],
     );
   }

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gap/gap.dart';
 import 'package:tempus/core/theme/app_colors.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_entry_entity.dart';
 import 'package:tempus/features/schedule/domain/entities/schedule_subject_entity.dart';
@@ -16,22 +17,36 @@ class TimetableGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.inputFill.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        children: [
-          _DayNavHeader(state: state),
-          const Divider(height: 1, thickness: 0.8, color: Color(0xFFEEEEEE)),
-          _DayTimeline(state: state),
-        ],
-      ),
+    // Column fills whatever Expanded height the parent gives.
+    // Day nav is fixed at the top; the timeline scrolls below it.
+    return Column(
+      children: [
+        // ── Sticky day-nav header ────────────────────────────────────────
+        Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              _DayNavHeader(state: state),
+              const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
+            ],
+          ),
+        ),
+
+        // ── Scrollable timeline — fills remaining height ─────────────────
+        Expanded(
+          child: Container(
+            color: Colors.white,
+            child: _DayTimeline(state: state),
+          ),
+        ),
+      ],
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Day navigation header
+// ---------------------------------------------------------------------------
 
 class _DayNavHeader extends StatelessWidget {
   final ScheduleLoaded state;
@@ -47,15 +62,14 @@ class _DayNavHeader extends StatelessWidget {
     final idx = state.selectedDayIndex;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
         children: [
           _NavArrow(
             icon: Icons.chevron_left_rounded,
             enabled: idx > 0,
-            onTap: () => context
-                .read<ScheduleBloc>()
-                .add(ScheduleDayPrevRequested()),
+            onTap: () =>
+                context.read<ScheduleBloc>().add(ScheduleDayPrevRequested()),
           ),
           Expanded(
             child: Row(
@@ -65,13 +79,12 @@ class _DayNavHeader extends StatelessWidget {
                 final today = _isToday(i);
 
                 return GestureDetector(
-                  onTap: () => context
-                      .read<ScheduleBloc>()
-                      .add(ScheduleDaySelected(i)),
+                  onTap: () =>
+                      context.read<ScheduleBloc>().add(ScheduleDaySelected(i)),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    width: 36,
-                    height: 44,
+                    width: 38,
+                    height: 46,
                     decoration: BoxDecoration(
                       color: selected
                           ? AppColors.brandBlue
@@ -100,8 +113,8 @@ class _DayNavHeader extends StatelessWidget {
                             shape: BoxShape.circle,
                             color: today
                                 ? (selected
-                                    ? Colors.white
-                                    : AppColors.brandBlue)
+                                      ? Colors.white
+                                      : AppColors.brandBlue)
                                 : Colors.transparent,
                           ),
                         ),
@@ -115,9 +128,8 @@ class _DayNavHeader extends StatelessWidget {
           _NavArrow(
             icon: Icons.chevron_right_rounded,
             enabled: idx < 6,
-            onTap: () => context
-                .read<ScheduleBloc>()
-                .add(ScheduleDayNextRequested()),
+            onTap: () =>
+                context.read<ScheduleBloc>().add(ScheduleDayNextRequested()),
           ),
         ],
       ),
@@ -152,11 +164,15 @@ class _NavArrow extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Day timeline — scrolls independently inside its Expanded slot
+// ---------------------------------------------------------------------------
+
 class _DayTimeline extends StatelessWidget {
   final ScheduleLoaded state;
 
   static const double _hourHeight = 64.0;
-  static const double _timeColWidth = 54.0;
+  static const double _timeColWidth = 52.0;
   static const int _startHour = 0;
   static const int _endHour = 24;
   static const int _totalHours = _endHour - _startHour;
@@ -193,9 +209,9 @@ class _DayTimeline extends StatelessWidget {
   List<_PositionedEntry> _resolve(List<ScheduleEntryEntity> entries) {
     if (entries.isEmpty) return [];
 
-    final sorted = [...entries]
-      ..sort(
-          (a, b) => _toOffset(a.startTime).compareTo(_toOffset(b.startTime)));
+    final sorted = [
+      ...entries,
+    ]..sort((a, b) => _toOffset(a.startTime).compareTo(_toOffset(b.startTime)));
 
     final List<double> colEnds = [];
     final Map<int, int> colMap = {};
@@ -246,10 +262,7 @@ class _DayTimeline extends StatelessWidget {
     showCupertinoModalPopup<void>(
       context: context,
       builder: (_) => CupertinoActionSheet(
-        title: Text(
-          entry.subjectName,
-          style: const TextStyle(fontSize: 13),
-        ),
+        title: Text(entry.subjectName, style: const TextStyle(fontSize: 13)),
         message: Text(
           '${entry.subjectCode}  •  ${_fmtTime(entry.startTime)} – ${_fmtTime(entry.endTime)}',
           style: const TextStyle(fontSize: 12),
@@ -264,10 +277,7 @@ class _DayTimeline extends StatelessWidget {
                 backgroundColor: Colors.transparent,
                 builder: (_) => BlocProvider.value(
                   value: scheduleBloc,
-                  child: EditScheduleSheet(
-                    entry: entry,
-                    subjects: subjects,
-                  ),
+                  child: EditScheduleSheet(entry: entry, subjects: subjects),
                 ),
               );
             },
@@ -296,139 +306,139 @@ class _DayTimeline extends StatelessWidget {
     final positioned = _resolve(entries);
     final gridHeight = _totalHours * _hourHeight;
 
-    return SizedBox(
-      height: 640,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 16, top: 4),
-          child: SizedBox(
-            height: gridHeight,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final eventsWidth =
-                    constraints.maxWidth - _timeColWidth - 8;
+    // SingleChildScrollView fills the Expanded slot — only the rows scroll,
+    // the day-nav header above stays fixed.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 4, bottom: 16),
+      child: SizedBox(
+        height: gridHeight,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final eventsWidth = constraints.maxWidth - _timeColWidth - 12;
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Time labels column
-                    SizedBox(
-                      width: _timeColWidth,
-                      child: Stack(
-                        children: List.generate(_totalHours + 1, (i) {
-                          return Positioned(
-                            top: i * _hourHeight - 7.0,
-                            left: 0,
-                            right: 4,
-                            child: Text(
-                              _fmtHour(_startHour + i),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                color: AppColors.foreground
-                                    .withValues(alpha: 0.75),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        }),
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Time labels ─────────────────────────────────────────
+                SizedBox(
+                  width: _timeColWidth,
+                  child: Stack(
+                    children: List.generate(_totalHours + 1, (i) {
+                      return Positioned(
+                        top: i * _hourHeight - 7.0,
+                        left: 0,
+                        right: 4,
+                        child: Text(
+                          _fmtHour(_startHour + i),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            color: AppColors.foreground.withValues(alpha: 0.75),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                // ── Events area ─────────────────────────────────────────
+                SizedBox(
+                  width: eventsWidth,
+                  child: Stack(
+                    children: [
+                      // Hour dividers
+                      ...List.generate(
+                        _totalHours + 1,
+                        (i) => Positioned(
+                          top: i * _hourHeight,
+                          left: 0,
+                          right: 0,
+                          child: Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Colors.grey.withValues(alpha: 0.20),
+                          ),
+                        ),
                       ),
-                    ),
 
-                    // Events column
-                    SizedBox(
-                      width: eventsWidth,
-                      child: Stack(
-                        children: [
-                          // Hour dividers
-                          ...List.generate(
-                            _totalHours + 1,
-                            (i) => Positioned(
-                              top: i * _hourHeight,
-                              left: 0,
-                              right: 0,
-                              child: Divider(
-                                height: 1,
-                                thickness: 0.5,
-                                color: Colors.grey.withValues(alpha: 0.20),
-                              ),
-                            ),
+                      // Half-hour dividers
+                      ...List.generate(
+                        _totalHours,
+                        (i) => Positioned(
+                          top: i * _hourHeight + _hourHeight / 2,
+                          left: 0,
+                          right: 0,
+                          child: Divider(
+                            height: 1,
+                            thickness: 0.5,
+                            color: Colors.grey.withValues(alpha: 0.08),
                           ),
+                        ),
+                      ),
 
-                          // Half-hour dividers
-                          ...List.generate(
-                            _totalHours,
-                            (i) => Positioned(
-                              top: i * _hourHeight + _hourHeight / 2,
-                              left: 0,
-                              right: 0,
-                              child: Divider(
-                                height: 1,
-                                thickness: 0.5,
-                                color: Colors.grey.withValues(alpha: 0.08),
-                              ),
-                            ),
-                          ),
-
-                          // Empty state
-                          if (entries.isEmpty)
-                            Positioned(
-                              top: gridHeight / 2 - 40,
-                              left: 0,
-                              right: 0,
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.event_available_outlined,
-                                    size: 32,
-                                    color: AppColors.foreground
-                                        .withValues(alpha: 0.3),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'No classes today',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.foreground
-                                          .withValues(alpha: 0.4),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                          // Entry blocks
-                          ...positioned.map((p) {
-                            final colWidth = eventsWidth / p.totalCols;
-                            final left = p.col * colWidth + 2;
-                            final width = colWidth - 4;
-                            final tc = p.color.computeLuminance() > 0.4
-                                ? Colors.black87
-                                : Colors.white;
-
-                            return Positioned(
-                              top: p.top + 1,
-                              left: left,
-                              width: width,
-                              height: p.height - 2,
-                              child: GestureDetector(
-                                onLongPress: () => _showContextMenu(
-                                  context,
-                                  p.entry,
-                                  state.subjects,
+                      // Empty state
+                      if (entries.isEmpty)
+                        Positioned(
+                          top: gridHeight / 2 - 40,
+                          left: 0,
+                          right: 0,
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.event_available_outlined,
+                                size: 32,
+                                color: AppColors.foreground.withValues(
+                                  alpha: 0.3,
                                 ),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: p.color,
-                                    borderRadius: BorderRadius.circular(6),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'No classes today',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.foreground.withValues(
+                                    alpha: 0.4,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 5,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // Entry blocks
+                      ...positioned.map((p) {
+                        final colWidth = eventsWidth / p.totalCols;
+                        final left = p.col * colWidth + 2;
+                        final width = colWidth - 4;
+                        final tc = p.color.computeLuminance() > 0.4
+                            ? Colors.black87
+                            : Colors.white;
+
+                        return Positioned(
+                          top: p.top + 1,
+                          left: left,
+                          width: width,
+                          height: p.height - 2,
+                          child: GestureDetector(
+                            onLongPress: () => _showContextMenu(
+                              context,
+                              p.entry,
+                              state.subjects,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: p.color,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 5,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
                                       Text(
                                         p.entry.subjectCode,
@@ -440,33 +450,54 @@ class _DayTimeline extends StatelessWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      if (p.height > 38)
-                                        Text(
-                                          '${p.startLabel} – ${p.endLabel}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color:
-                                                tc.withValues(alpha: 0.85),
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                                      
+                                      Gap(4),
+                                      
+                                      Text(
+                                        '-',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: tc,
                                         ),
+                                      ),
+                                      
+                                      Gap(4),
+
+                                      Text(
+                                        p.entry.subjectName,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: tc,
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                ),
+                                  if (p.height > 38)
+                                    Text(
+                                      '${p.startLabel} – ${p.endLabel}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: tc.withValues(alpha: 0.85),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
                               ),
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
 
-                    const SizedBox(width: 8),
-                  ],
-                );
-              },
-            ),
-          ),
+                const SizedBox(width: 12),
+              ],
+            );
+          },
         ),
       ),
     );
