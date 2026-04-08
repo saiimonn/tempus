@@ -114,6 +114,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.brandBlue,
         elevation: 0,
         centerTitle: false,
