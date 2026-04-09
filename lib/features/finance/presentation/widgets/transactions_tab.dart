@@ -41,15 +41,6 @@ class TransactionsTab extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Transactions',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.text,
-                          ),
-                        ),
-
-                        Text(
                           '${state.transactions.length} total',
                           style: const TextStyle(
                             fontSize: 12,

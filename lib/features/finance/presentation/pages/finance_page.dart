@@ -34,12 +34,13 @@ class FinancePage extends StatelessWidget {
   static List<BlocProvider> createProviders() {
     final client = Supabase.instance.client;
 
-    final financeRepo =
-        FinanceRepositoryImpl(FinanceRemoteDataSource(client));
-    final transactionRepo =
-        TransactionRepositoryImpl(TransactionsRemoteDataSource(client));
-    final subscriptionRepo =
-        SubscriptionRepositoryImpl(SubscriptionRemoteDataSource(client));
+    final financeRepo = FinanceRepositoryImpl(FinanceRemoteDataSource(client));
+    final transactionRepo = TransactionRepositoryImpl(
+      TransactionsRemoteDataSource(client),
+    );
+    final subscriptionRepo = SubscriptionRepositoryImpl(
+      SubscriptionRemoteDataSource(client),
+    );
 
     return [
       BlocProvider<FinanceBloc>(
@@ -71,7 +72,8 @@ class FinancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceBloc, FinanceState>(
       builder: (context, state) {
-        final bool isLoading = state.status == FinanceStatus.loading ||
+        final bool isLoading =
+            state.status == FinanceStatus.loading ||
             state.status == FinanceStatus.initial;
 
         final displayState = isLoading
@@ -125,9 +127,8 @@ class _FinanceContent extends StatelessWidget {
                   children: List.generate(tabs.length, (i) {
                     final isSelected = state.selectedTabIndex == i;
                     return GestureDetector(
-                      onTap: () => context
-                          .read<FinanceBloc>()
-                          .add(FinanceTabChanged(i)),
+                      onTap: () =>
+                          context.read<FinanceBloc>().add(FinanceTabChanged(i)),
                       child: Container(
                         margin: const EdgeInsets.only(right: 20),
                         padding: const EdgeInsets.only(bottom: 10),
@@ -161,13 +162,31 @@ class _FinanceContent extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: IndexedStack(
-              index: state.selectedTabIndex,
-              children: const [
-                BudgetTab(),
-                TransactionsTab(),
-                SubscriptionsTab(),
-              ],
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.04),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              
+              child: KeyedSubtree(
+                key: ValueKey<int>(state.selectedTabIndex),
+                child: [
+                  const BudgetTab(),
+                  const TransactionsTab(),
+                  const SubscriptionsTab(),
+                ][state.selectedTabIndex],
+              ),
             ),
           ),
         ],

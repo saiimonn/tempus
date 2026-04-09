@@ -203,6 +203,7 @@ class _SubjectDetailPageState extends State<SubjectDetailPage> {
           backgroundColor: AppColors.background,
           appBar: AppBar(
             backgroundColor: AppColors.background,
+            surfaceTintColor: Colors.transparent,
             elevation: 0,
             leading: _isEditing
                 ? IconButton(
