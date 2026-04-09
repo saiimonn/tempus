@@ -40,26 +40,37 @@ import 'package:tempus/features/tasks/domain/use_cases/update_task.dart';
 import 'package:tempus/features/tasks/presentation/blocs/task/task_bloc.dart';
 import 'package:tempus/features/tasks/presentation/pages/tasks_page.dart';
 
-final _fakeSummary = HomeSummaryEntity(
-  todayTasks: List.generate(
-    3,
-    (i) =>
-        TaskEntity(id: i, title: 'Loading task title here', status: 'pending'),
-  ),
-  todaySchedule: List.generate(
-    3,
-    (i) => ScheduleEntryEntity(
-      id: i,
-      subId: 0,
-      subjectName: 'Loading Subject Name',
-      subjectCode: 'LOAD',
-      days: [],
-      startTime: '08:00',
-      endTime: '10:00',
+HomeSummaryEntity _buildSkeletonSummary() {
+  final now = DateTime.now();
+  return HomeSummaryEntity(
+    todayTasks: List.generate(
+      3,
+      (i) => TaskEntity(
+        id: i,
+        title: 'Loading task title here',
+        status: 'pending',
+        dueDate: now,
+      ),
     ),
-  ),
-  finance: const FinanceEntity(id: 0, weeklyAllowance: 5000, totalAmount: 2500),
-);
+    todaySchedule: List.generate(
+      3,
+      (i) => ScheduleEntryEntity(
+        id: i,
+        subId: 0,
+        subjectName: 'Loading Subject Name',
+        subjectCode: 'LOAD',
+        days: [],
+        startTime: '08:00',
+        endTime: '10:00',
+      ),
+    ),
+    finance: const FinanceEntity(
+      id: 0,
+      weeklyAllowance: 5000,
+      totalAmount: 2500,
+    ),
+  );
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -114,7 +125,6 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.brandBlue,
         elevation: 0,
         centerTitle: false,
@@ -145,7 +155,6 @@ class _HomePageState extends State<HomePage> {
             tooltip: 'Notifications',
             onPressed: () => print("Notification Page"),
           ),
-          
           IconButton(
             icon: const Icon(Icons.account_circle),
             tooltip: 'Account',
@@ -168,26 +177,24 @@ class _HomePageState extends State<HomePage> {
         children: [
           _HomeContent(firstName: name, onNavigateToTab: _onItemTapped),
 
-          // ── Schedule (remote) ──────────────────────────────────────────────────
+          //Schedule 
           BlocProvider<ScheduleBloc>(
             create: (ctx) {
-              // Store a reference so SubjectBloc can call refreshSubjects on it.
               _scheduleBloc = ScheduleBloc(
                 loadSchedule: LoadSchedule(ScheduleRepositoryImpl.create()),
-                addScheduleEntry: AddScheduleEntry(
-                  ScheduleRepositoryImpl.create(),
-                ),
-                updateScheduleEntry: UpdateScheduleEntry(ScheduleRepositoryImpl.create()),
-                deleteScheduleEntry: DeleteScheduleEntry(
-                  ScheduleRepositoryImpl.create(),
-                ),
+                addScheduleEntry:
+                    AddScheduleEntry(ScheduleRepositoryImpl.create()),
+                updateScheduleEntry:
+                    UpdateScheduleEntry(ScheduleRepositoryImpl.create()),
+                deleteScheduleEntry:
+                    DeleteScheduleEntry(ScheduleRepositoryImpl.create()),
               )..add(ScheduleLoadRequested());
               return _scheduleBloc!;
             },
             child: const SchedulePage(),
           ),
 
-          // ── Tasks (remote) ─────────────────────────────────────────────────────
+          //Tasks
           BlocProvider<TaskBloc>(
             create: (_) {
               final repo = TaskRepositoryImpl(TaskRemoteDataSource(client));
@@ -201,13 +208,13 @@ class _HomePageState extends State<HomePage> {
             child: const TasksPage(),
           ),
 
-          // ── Finance (remote) ───────────────────────────────────────────────────
+          //Finance
           MultiBlocProvider(
             providers: FinancePage.createProviders(),
             child: const FinancePage(),
           ),
 
-          // ── Subjects (remote) — notifies ScheduleBloc on subject add ──────────
+          //Subjects
           BlocProvider<SubjectBloc>(
             create: (_) {
               final repo = SubjectRepositoryImpl(
@@ -216,7 +223,6 @@ class _HomePageState extends State<HomePage> {
               return SubjectBloc(
                 getSubjects: GetSubjects(repo),
                 addSubject: AddSubject(repo),
-                // Callback: tell ScheduleBloc its subject list is stale.
                 onSubjectAdded: () {
                   _scheduleBloc?.add(ScheduleSubjectsRefreshRequested());
                 },
@@ -255,13 +261,16 @@ class _HomeContent extends StatelessWidget {
             state.status == HomeStatus.initial ||
             state.status == HomeStatus.loading;
 
+        final displaySummary =
+            isLoading ? _buildSkeletonSummary() : state.summary;
+
+        if (displaySummary == null) return const SizedBox.shrink();
+
         return Skeletonizer(
           enabled: isLoading,
           child: _LoadedContent(
             name: firstName,
-            state: isLoading
-                ? HomeState(status: HomeStatus.loaded, summary: _fakeSummary)
-                : state,
+            summary: displaySummary,
             onNavigateToTasks: () => onNavigateToTab(2),
           ),
         );
@@ -319,19 +328,17 @@ class _ErrorContent extends StatelessWidget {
 
 class _LoadedContent extends StatelessWidget {
   final String name;
-  final HomeState state;
+  final HomeSummaryEntity summary;
   final VoidCallback onNavigateToTasks;
 
   const _LoadedContent({
     required this.name,
-    required this.state,
+    required this.summary,
     required this.onNavigateToTasks,
   });
 
   @override
   Widget build(BuildContext context) {
-    final summary = state.summary!;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
       child: Column(
